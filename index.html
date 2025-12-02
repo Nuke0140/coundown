@@ -1,0 +1,5039 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Countdown To Your Beautiful Day</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Google Fonts: Playfair Display (elegant serif) & Inter (clean sans-serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Configure custom colors and font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'romantic-purple': '#6B46C1',
+                        'soft-pink': '#EC4899',
+                        'accent-gold': '#F59E0B',
+                        'deep-plum': '#4C1D95',
+                        'midnight': '#1E1B4B',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <script>
+        // Romantic Login Logic - run after DOM ready
+        document.addEventListener('DOMContentLoaded', function () {
+            (function () {
+                const PASSWORD_B64 = 'SXNoYTIyNA=='; // base64("Isha224")
+                const REQUIRED_OPTION = 'opt2';
+
+                const secretInput = document.getElementById('secret');
+                const choiceSelect = document.getElementById('choice');
+                const loginBtn = document.getElementById('login-btn');
+                const feedback = document.getElementById('login-feedback');
+                const loginModal = document.getElementById('romantic-login');
+                const loginCard = document.getElementById('login-card');
+                const dragHandle = document.getElementById('login-title');
+
+                function utf8ToB64(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+                function spawnHearts(count) {
+                    for (let i = 0; i < count; i++) {
+                        const h = document.createElement('div');
+                        h.textContent = ['💖', '💕', '💗', '💓'][Math.floor(Math.random() * 4)];
+                        h.style.position = 'absolute';
+                        h.style.left = `${30 + Math.random() * 40}%`;
+                        h.style.bottom = '18px';
+                        h.style.fontSize = `${14 + Math.random() * 18}px`;
+                        h.style.opacity = '0';
+                        h.style.pointerEvents = 'none';
+                        h.style.transform = 'translateY(0)';
+                        h.style.transition = 'transform 2200ms cubic-bezier(.2,.9,.2,1), opacity 2200ms';
+                        h.classList.add('music-heart');
+                        if (loginCard) loginCard.appendChild(h);
+                        requestAnimationFrame(() => {
+                            h.style.opacity = '1';
+                            h.style.transform = `translateY(-120px) scale(${1 + Math.random() * 0.4})`;
+                        });
+                        setTimeout(() => { h.remove(); }, 2200 + Math.random() * 800);
+                    }
+                }
+
+                // Canvas-based confetti + interactive hearts
+                const confettiCanvas = document.getElementById('confetti-canvas');
+                const confettiCtx = confettiCanvas && confettiCanvas.getContext ? confettiCanvas.getContext('2d') : null;
+                let confettiParticles = [];
+                let heartParticlesCanvas = [];
+                let confettiRAF = null;
+
+                function resizeCanvas() {
+                    if (!confettiCanvas) return;
+                    confettiCanvas.width = window.innerWidth;
+                    confettiCanvas.height = window.innerHeight;
+                }
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+
+                function spawnConfetti(count) {
+                    if (!confettiCtx) return;
+                    const colors = ['#ff6b9d', '#c084fc', '#fbbf24', '#f43f5e', '#ffffff'];
+                    for (let i = 0; i < count; i++) {
+                        confettiParticles.push({
+                            x: Math.random() * confettiCanvas.width,
+                            y: -10 - Math.random() * 100,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: 2 + Math.random() * 5,
+                            size: 6 + Math.random() * 10,
+                            color: colors[Math.floor(Math.random() * colors.length)],
+                            rot: Math.random() * Math.PI * 2,
+                            rotSpeed: (Math.random() - 0.5) * 0.2,
+                            ttl: 4000 + Math.random() * 2200,
+                            born: performance.now()
+                        });
+                    }
+                    if (!confettiRAF) confettiLoop();
+                }
+                // expose heart spawn too
+                window.spawnHeartCanvas = spawnHeartCanvas;
+                // expose for global use (e.g., cinematic reveal)
+                window.spawnConfetti = spawnConfetti;
+
+                function spawnHeartCanvas(x, y, count = 1) {
+                    if (!confettiCtx) return;
+                    for (let i = 0; i < count; i++) {
+                        heartParticlesCanvas.push({
+                            x: x + (Math.random() - 0.5) * 40,
+                            y: y + (Math.random() - 0.5) * 20,
+                            vx: (Math.random() - 0.5) * 1.6,
+                            vy: -1.5 - Math.random() * 1.6,
+                            life: 2000 + Math.random() * 1400,
+                            born: performance.now(),
+                            size: 18 + Math.random() * 18,
+                            color: ['#ff6b9d', '#ff4d7e', '#ffc0cb'][Math.floor(Math.random() * 3)]
+                        });
+                    }
+                    if (!confettiRAF) confettiLoop();
+                }
+
+                function confettiLoop() {
+                    confettiRAF = requestAnimationFrame(confettiLoop);
+                    if (!confettiCtx) return;
+                    const now = performance.now();
+                    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+                    // update & draw confetti
+                    for (let i = confettiParticles.length - 1; i >= 0; i--) {
+                        const p = confettiParticles[i];
+                        const age = now - p.born;
+                        if (age > p.ttl || p.y > confettiCanvas.height + 50) { confettiParticles.splice(i, 1); continue; }
+                        p.x += p.vx;
+                        p.y += p.vy + 0.04 * (age / 1000);
+                        p.rot += p.rotSpeed;
+                        const alpha = 1 - age / p.ttl;
+                        confettiCtx.save();
+                        confettiCtx.translate(p.x, p.y);
+                        confettiCtx.rotate(p.rot);
+                        confettiCtx.fillStyle = p.color;
+                        confettiCtx.globalAlpha = alpha;
+                        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                        confettiCtx.restore();
+                    }
+
+                    // update & draw heart particles
+                    for (let i = heartParticlesCanvas.length - 1; i >= 0; i--) {
+                        const h = heartParticlesCanvas[i];
+                        const age = now - h.born;
+                        if (age > h.life) { heartParticlesCanvas.splice(i, 1); continue; }
+                        h.vy += 0.02;
+                        h.x += h.vx;
+                        h.y += h.vy;
+                        const t = age / h.life;
+                        const alpha = 1 - t;
+                        confettiCtx.save();
+                        confettiCtx.translate(h.x, h.y);
+                        confettiCtx.globalAlpha = alpha;
+                        confettiCtx.fillStyle = h.color;
+                        confettiCtx.font = `${h.size}px serif`;
+                        confettiCtx.fillText('❤', -h.size / 2, h.size / 2);
+                        confettiCtx.restore();
+                    }
+
+                    if (confettiParticles.length === 0 && heartParticlesCanvas.length === 0) {
+                        cancelAnimationFrame(confettiRAF);
+                        confettiRAF = null;
+                    }
+                }
+
+                let dragging = false;
+                let startX = 0, startY = 0;
+                let tx = 0, ty = 0;
+                function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+                function onPointerDown(e) {
+                    dragging = true;
+                    const cx = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+                    const cy = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+                    startX = cx - tx;
+                    startY = cy - ty;
+                    loginCard.classList.add('dragging');
+                    loginCard.style.transition = 'none';
+                }
+                function onPointerMove(e) {
+                    if (!dragging) return;
+                    const cx = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+                    const cy = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+                    tx = cx - startX;
+                    ty = cy - startY;
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const w = loginCard.offsetWidth;
+                    const h = loginCard.offsetHeight;
+                    const maxX = (vw - w) / 2;
+                    const maxY = (vh - h) / 2;
+                    tx = clamp(tx, -maxX, maxX);
+                    ty = clamp(ty, -maxY, maxY);
+                    loginCard.style.transform = `translate(${tx}px, ${ty}px)`;
+                    if (Math.random() < 0.06) spawnHearts(1);
+                }
+                function onPointerUp() {
+                    if (!dragging) return;
+                    dragging = false;
+                    loginCard.classList.remove('dragging');
+                    loginCard.style.transition = 'transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms';
+                    loginCard.style.transform = `translate(${tx}px, ${ty}px)`;
+                }
+                if (dragHandle) {
+                    dragHandle.addEventListener('pointerdown', onPointerDown, { passive: true });
+                    window.addEventListener('pointermove', onPointerMove, { passive: true });
+                    window.addEventListener('pointerup', onPointerUp, { passive: true });
+                    window.addEventListener('touchmove', onPointerMove, { passive: true });
+                    window.addEventListener('touchend', onPointerUp, { passive: true });
+                }
+
+                // mouse / touch interactive hearts
+                let lastMouseTime = 0;
+                function onPointer(e) {
+                    const now = Date.now();
+                    if (now - lastMouseTime < 60) return; // throttle
+                    lastMouseTime = now;
+                    const x = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || (window.innerWidth / 2);
+                    const y = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || (window.innerHeight / 2);
+                    spawnHeartCanvas(x, y, 1);
+                    // move lighting center
+                    document.documentElement.style.setProperty('--light-x', (x / window.innerWidth * 100) + '%');
+                    document.documentElement.style.setProperty('--light-y', (y / window.innerHeight * 100) + '%');
+                }
+                window.addEventListener('mousemove', onPointer, { passive: true });
+                window.addEventListener('touchstart', onPointer, { passive: true });
+
+                // Live lighting based on local time
+                const animatedBgElem = document.getElementById('animated-bg');
+                function applyTimeLighting() {
+                    try {
+                        const h = new Date().getHours();
+                        if (!animatedBgElem) return;
+                        if (h >= 18 || h < 6) {
+                            animatedBgElem.classList.add('warm-glow');
+                            document.documentElement.style.setProperty('--lighting-color', 'rgba(255,107,157,0.18)');
+                        } else if (h >= 6 && h < 12) {
+                            animatedBgElem.classList.remove('warm-glow');
+                            document.documentElement.style.setProperty('--lighting-color', 'rgba(255,230,200,0.06)');
+                        } else {
+                            animatedBgElem.classList.remove('warm-glow');
+                            document.documentElement.style.setProperty('--lighting-color', 'rgba(200,220,255,0.04)');
+                        }
+                    } catch (e) { console.warn(e) }
+                }
+                applyTimeLighting();
+
+                // Hover / interaction glow
+                let glowTimeout = null;
+                function triggerInteractiveGlow() {
+                    if (!animatedBgElem) return;
+                    animatedBgElem.classList.add('interactive-glow');
+                    if (glowTimeout) clearTimeout(glowTimeout);
+                    glowTimeout = setTimeout(() => { animatedBgElem.classList.remove('interactive-glow'); }, 900);
+                }
+                const appEl = document.getElementById('app-container');
+                if (appEl) {
+                    appEl.addEventListener('mouseenter', () => { triggerInteractiveGlow(); });
+                    appEl.addEventListener('mousemove', () => { triggerInteractiveGlow(); });
+                    appEl.addEventListener('touchstart', () => { triggerInteractiveGlow(); }, { passive: true });
+                }
+
+                if (!secretInput || !choiceSelect || !loginBtn || !feedback || !loginCard) {
+                    // If elements are missing, do nothing (helps avoid runtime errors).
+                    return;
+                }
+
+                const appContainer = document.getElementById('app-container');
+
+                // Focus trap helpers
+                function getFocusable(container) {
+                    return Array.from(container.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])')).filter(el => el.offsetParent !== null);
+                }
+
+                function trapFocus(e) {
+                    if (e.key !== 'Tab') return;
+                    const focusables = getFocusable(loginCard);
+                    if (focusables.length === 0) return;
+                    const first = focusables[0];
+                    const last = focusables[focusables.length - 1];
+                    if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault(); first.focus();
+                    } else if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault(); last.focus();
+                    }
+                }
+
+                // Attach focus trap to login modal
+                document.addEventListener('keydown', function (e) {
+                    if (!document.getElementById('romantic-login')) return;
+                    trapFocus(e);
+                    // Prevent Escape from closing the dialog accidentally
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                    }
+                }, true);
+
+                // Initially keep page gated
+                if (appContainer) appContainer.setAttribute('aria-hidden', 'true');
+
+                loginBtn.addEventListener('click', () => {
+                    const val = secretInput.value || '';
+                    const choice = choiceSelect.value;
+
+                    // simple encoded compare (client-side). This avoids storing plain text in DOM.
+                    const encoded = utf8ToB64(val.trim());
+
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = '⏳ Checking...';
+
+                    setTimeout(() => {
+                        const ok = (encoded === PASSWORD_B64) && (choice === REQUIRED_OPTION);
+                        if (ok) {
+                            // success
+                            feedback.innerHTML = '✨ Access granted of my heart 💖<br>Don’t worry… here only you are allowed — not me, not your friend, not even your employees 😉';
+                            feedback.style.color = '#ffd1e6';
+                            spawnHearts(12);
+                            spawnConfetti(40);
+                            // gentle pulse
+                            loginCard.style.transition = 'transform 480ms ease';
+                            loginCard.style.transform = 'scale(1.02)';
+                            setTimeout(() => loginCard.style.transform = '', 600);
+
+                            // Reveal app and hide modal (keep for accessibility but visually hidden)
+                            if (appContainer) {
+                                appContainer.removeAttribute('aria-hidden');
+                            }
+                            if (loginModal) {
+                                loginModal.classList.add('opacity-0');
+                                loginModal.setAttribute('aria-hidden', 'true');
+                                setTimeout(() => loginModal.style.display = 'none', 600);
+                            }
+
+                            // move focus into app
+                            setTimeout(() => {
+                                const focusables = getFocusable(appContainer || document.body);
+                                if (focusables.length) focusables[0].focus();
+                            }, 700);
+                        } else {
+                            // failure
+                            feedback.textContent = 'Error Hai Isha: Cute attempt but wrong password😌';
+                            feedback.style.color = '#ff6b6b';
+                            loginCard.classList.remove('shake');
+                            void loginCard.offsetWidth;
+                            loginCard.classList.add('shake');
+                            spawnHearts(3);
+                        }
+
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = '❤️ Open My Heart.';
+                    }, 420);
+                });
+
+                // allow Enter to submit
+                secretInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { loginBtn.click(); }
+                });
+
+                // initial focus
+                setTimeout(() => { secretInput.focus(); }, 300);
+            })();
+        });
+    </script>
+    <style>
+        #romantic-login {
+            backdrop-filter: blur(8px) saturate(130%)
+        }
+
+        #login-card {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.14) !important;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+            transition: transform 280ms cubic-bezier(.2, .9, .2, 1), box-shadow 280ms;
+            cursor: grab
+        }
+
+        #login-card.dragging {
+            box-shadow: 0 28px 60px rgba(0, 0, 0, 0.55);
+            transform: scale(1.02)
+        }
+
+        #login-title {
+            cursor: grab
+        }
+
+        /* Global Styles & Variables */
+        :root {
+            --bg-gradient-start: #1a0a2e;
+            --bg-gradient-end: #16213e;
+            --glass-bg: rgba(255, 255, 255, 0.003);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --romantic-pink: #ff6b9d;
+            --romantic-purple: #c084fc;
+            --romantic-rose: #f43f5e;
+            --romantic-gold: #fbbf24;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+        }
+
+        /* Invisible scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        html {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        /* Removed for performance. The body's static gradient is now the background.
+        #animated-bg { ... }
+        #animated-bg::before { ... }
+        @keyframes gradientShift { ... }
+        @keyframes pulseGlow { ... }
+        */
+
+        /* Enhanced Floating Objects with More Variety */
+        .floating-object {
+            position: fixed;
+            top: -10%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            z-index: 1;
+            pointer-events: none;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.6));
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(120vh) rotate(360deg) scale(1.2);
+            }
+        }
+
+        /* Simplified Main App Container */
+        #app-container {
+            width: 100%;
+            max-width: 594px;
+            height: 100vh;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: #1E1B4B;
+            /* Solid background for performance */
+            border-radius: 4px;
+            border: 1px solid #4C1D95;
+            /* Simplified border */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            /* Simplified shadow */
+            overflow: hidden;
+            position: relative;
+        }
+
+        #app-container::before {
+            content: none;
+            /* Disabled rotating glow for performance */
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Simplified Fixed Header Section */
+        .header-wrapper {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 531px;
+            z-index: 100;
+            background: #2a163e;
+            /* Solid background */
+            border-bottom: 1px solid #4C1D95;
+            /* Simplified border */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Enhanced Header Styling */
+        .header-content {
+            padding: 2.5rem 2rem 2rem 2rem;
+            /* Adjusted bottom padding */
+            text-align: center;
+            background: linear-gradient(to bottom,
+                    rgba(255, 107, 157, 0.25),
+                    rgba(192, 132, 252, 0.25),
+                    rgba(251, 191, 36, 0.15));
+            position: relative;
+            overflow: hidden;
+            min-height: 280px;
+            /* Ensure minimum height */
+        }
+
+        .header-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            animation: shimmer 18s infinite linear;
+        }
+
+        .header-content::after {
+            content: '💖';
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.1;
+            top: 10%;
+            right: 10%;
+            animation: float-heart 6s infinite ease-in-out;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .main-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #ffd1dc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 107, 157, 0.5);
+            position: relative;
+            z-index: 1;
+            animation: textGlow 3s ease-in-out infinite;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes textGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.5));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.8));
+            }
+        }
+
+        .sub-heading {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 0.75rem;
+            position: relative;
+            z-index: 1;
+            font-size: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 0.75rem;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 15px rgba(251, 191, 36, 0.5);
+        }
+
+        /* Enhanced Countdown Timer */
+        #countdown-timer {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+            /* Reduced from 2rem */
+            margin-bottom: 0.5rem;
+            /* Add bottom margin */
+            position: relative;
+            z-index: 1;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+        }
+
+        .countdown-segment {
+            text-align: center;
+            position: relative;
+            padding: 0.75rem 0.5rem;
+            /* Reduced padding */
+            background: rgba(255, 255, 255, 0.12);
+            /* Increased opacity */
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            /* Simplified border */
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 60px;
+            /* Minimum width for small screens */
+        }
+
+        .countdown-segment:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(255, 107, 157, 0.15);
+            /* Simplified shadow */
+        }
+
+        .countdown-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.8),
+                0 0 40px rgba(255, 107, 157, 0.6);
+            animation: sparkle 2.5s infinite;
+            position: relative;
+        }
+
+        .countdown-value::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.3) 0%, transparent 70%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes sparkle {
+
+            0%,
+            100% {
+                text-shadow: 0 0 20px rgba(251, 191, 36, 0.8),
+                    0 0 40px rgba(255, 107, 157, 0.6);
+                transform: scale(1);
+            }
+
+            50% {
+                text-shadow: 0 0 30px rgba(251, 191, 36, 1),
+                    0 0 60px rgba(255, 107, 157, 0.8),
+                    0 0 80px rgba(192, 132, 252, 0.6);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        .countdown-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0.5rem;
+        }
+
+        /* Enhanced Content Sections */
+        #content-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+            margin-top: 320px;
+            /* Increased to prevent collision with header */
+            margin-bottom: 100px;
+            /* Increased to prevent collision with nav */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            min-height: calc(100vh - 420px);
+            /* Ensure minimum height */
+        }
+
+        #content-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .content-section {
+            display: none;
+            padding-bottom: 1rem;
+            /* Add bottom padding to sections */
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Simplified Cards */
+        .glass-card {
+            background: #2b0f2e;
+            /* Solid background */
+            border-radius: 24px;
+            border: 1px solid #4C1D95;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card::before {
+            content: none;
+            /* Disabled shimmer effect */
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: #6B46C1;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #ffd1dc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .card-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        /* Enhanced Navigation Bar */
+        .nav-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            background: #100c2a;
+            /* Solid background */
+            border-top: 1px solid #4C1D95;
+            /* Simplified border */
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            min-height: 90px;
+        }
+
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 1.25rem 0.5rem;
+            align-items: center;
+        }
+
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b9d, #c084fc, #fbbf24);
+            transform: translateX(-50%);
+            transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 2px;
+        }
+
+        .nav-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+
+        .nav-button:hover::after {
+            width: 80px;
+            height: 80px;
+        }
+
+        .nav-button:hover::before {
+            width: 70%;
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #FFFFFF;
+            transform: translateY(-3px);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg,
+                    rgba(255, 107, 157, 0.4),
+                    rgba(192, 132, 252, 0.4));
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(255, 107, 157, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-button.active::before {
+            width: 70%;
+        }
+
+        .nav-button.active::after {
+            width: 80px;
+            height: 80px;
+        }
+
+        .nav-icon {
+            width: 26px;
+            height: 26px;
+            margin-bottom: 0.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-button:hover .nav-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Enhanced Slider */
+        #slider {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+            animation: slideGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes slideGlow {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+        }
+
+        /* Enhanced Respect Cards */
+        .respect-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+            /* Increased gap for better spacing */
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+            /* Add bottom margin */
+            padding-bottom: 1rem;
+            /* Add padding */
+        }
+
+        .respect-card {
+            background: linear-gradient(135deg, #2b0f2e, #1b0a24);
+            /* Solid romantic background */
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            /* More visible border */
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            min-height: 140px;
+            /* Ensure minimum height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0.5;
+            /* Increased from 0.3 for better visibility */
+            transform: scale(0.95);
+            /* Less dramatic scale */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            /* Add shadow even when locked */
+        }
+
+        .respect-card.unlocked {
+            opacity: 1;
+            transform: scale(1);
+            animation: cardUnlock 1s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2),
+                0 0 20px rgba(255, 107, 157, 0.3);
+            /* Enhanced glow */
+            background: rgba(255, 255, 255, 0.18);
+            /* Slightly brighter when unlocked */
+        }
+
+        .respect-card.unlocked:hover {
+            transform: translateY(-8px) scale(1.05) rotate(2deg);
+            box-shadow: 0 15px 40px rgba(255, 107, 157, 0.5),
+                0 0 40px rgba(192, 132, 252, 0.4);
+            /* Stronger glow on hover */
+            border-color: rgba(255, 107, 157, 0.7);
+            /* More visible border */
+        }
+
+        .respect-card.unlocked::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .respect-card.unlocked:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes cardUnlock {
+            0% {
+                opacity: 0;
+                transform: scale(0.7) rotate(-10deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .respect-number {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ff6b9d, #c084fc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .respect-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            /* Slightly larger */
+            font-weight: 500;
+            /* Bolder for visibility */
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.5;
+            margin-top: 0.75rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            /* Add text shadow for readability */
+        }
+
+        .respect-icon {
+            font-size: 2.25rem;
+            /* Larger icon */
+            margin-bottom: 0.75rem;
+            filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.9));
+            /* Stronger glow */
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-5px) scale(1.1);
+            }
+        }
+
+        .locked-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            /* Darker, non-blurry overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+        }
+
+        .respect-card:not(.unlocked) .respect-text {
+            filter: blur(4px);
+        }
+
+        .lock-icon {
+            font-size: 2.5rem;
+            /* Larger lock icon */
+            color: rgba(255, 255, 255, 0.9);
+            /* Brighter */
+            animation: lockPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.6));
+            /* Add glow */
+        }
+
+        .respect-progress {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b9d, #c084fc, #fbbf24);
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.4),
+                    transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .progress-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Enhanced Audio Player */
+        .audio-player {
+            background: linear-gradient(135deg, #3a153a, #2a0f3a);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            transition: all 0.5s ease;
+        }
+
+        .audio-player.playing {
+            box-shadow: 0 0 40px rgba(255, 107, 157, 0.5),
+                0 0 80px rgba(192, 132, 252, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 107, 157, 0.6);
+            animation: playerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes playerPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 40px rgba(255, 107, 157, 0.5), 0 0 80px rgba(192, 132, 252, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(255, 107, 157, 0.7), 0 0 120px rgba(192, 132, 252, 0.5);
+            }
+        }
+
+        .player-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .song-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #ffd1dc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: opacity 0.5s ease;
+            margin-bottom: 0.75rem;
+        }
+
+        .song-artist {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.1rem;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .heart-play-btn {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #ff6b9d, #c084fc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.6),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .heart-play-btn::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b9d, #c084fc);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            filter: blur(10px);
+        }
+
+        .heart-play-btn:hover::before {
+            opacity: 0.6;
+        }
+
+        .heart-play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(255, 107, 157, 0.8),
+                inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .heart-play-btn.playing {
+            animation: heartbeat 1.5s infinite ease-in-out;
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            14% {
+                transform: scale(1.15);
+            }
+
+            28% {
+                transform: scale(1);
+            }
+
+            42% {
+                transform: scale(1.15);
+            }
+
+            70% {
+                transform: scale(1);
+            }
+        }
+
+        .heart-icon {
+            width: 40px;
+            height: 40px;
+            fill: white;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: background 0.3s ease;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b9d, #c084fc, #fbbf24);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 15px rgba(255, 107, 157, 0.6);
+        }
+
+        .song-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .song-counter {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .next-unlock {
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .unlock-time {
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced Garden Styles */
+        .garden-container {
+            margin-bottom: 2rem;
+        }
+
+        .garden-plot {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 2rem auto 2.5rem;
+            background: radial-gradient(circle,
+                    rgba(139, 69, 19, 0.3),
+                    rgba(34, 197, 94, 0.5),
+                    rgba(255, 107, 157, 0.2));
+            border-radius: 50%;
+            border: 3px dashed rgba(255, 107, 157, 0.5);
+            overflow: hidden;
+            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 40px rgba(255, 107, 157, 0.3),
+                inset 0 0 30px rgba(192, 132, 252, 0.2);
+        }
+
+        .garden-plot.complete-heart {
+            animation: complete-heart-pulse 3s infinite ease-in-out;
+            border-color: rgba(251, 191, 36, 0.8);
+            box-shadow: 0 0 60px rgba(251, 191, 36, 0.5),
+                inset 0 0 40px rgba(255, 107, 157, 0.3);
+        }
+
+        .heart-piece {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            filter: drop-shadow(0 0 12px rgba(255, 107, 157, 0.8));
+            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: 160px 160px;
+            opacity: 0;
+            animation: heartAppear 1s ease-out forwards;
+        }
+
+        @keyframes heartAppear {
+            from {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .final-rose {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background-size: contain;
+            transform-origin: center;
+            opacity: 0;
+            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: roseBloom 2s ease-out forwards;
+        }
+
+        @keyframes roseBloom {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(0deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(360deg);
+            }
+        }
+
+        @keyframes complete-heart-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.8));
+            }
+
+            50% {
+                transform: scale(1.02);
+                filter: drop-shadow(0 0 25px rgba(255, 120, 170, 1));
+            }
+        }
+
+        /* Enhanced Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: inline-block;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b9d, #c084fc);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(255, 107, 157, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        /* Enhanced Reveal Message */
+        #reveal-message {
+            background: linear-gradient(135deg,
+                    rgba(251, 191, 36, 0.9),
+                    rgba(255, 107, 157, 0.9),
+                    rgba(192, 132, 252, 0.9));
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3),
+                0 0 60px rgba(255, 107, 157, 0.4);
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            animation: revealPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes revealPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        #reveal-message::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            animation: shimmer 12s infinite linear;
+        }
+
+        #reveal-message h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #reveal-message p {
+            position: relative;
+            z-index: 1;
+            font-size: 1.2rem;
+        }
+
+        /* Enhanced Surprise Section */
+        #surprise-details {
+            background: linear-gradient(135deg,
+                    rgba(255, 107, 157, 0.4),
+                    rgba(192, 132, 252, 0.4),
+                    rgba(251, 191, 36, 0.3));
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        #surprise-details::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            animation: shimmer 18s infinite linear;
+        }
+
+        #surprise-details h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #ffffff, #ffd1dc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #surprise-details p {
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        #surprise-link {
+            display: inline-block;
+            padding: 1.25rem 3rem;
+            background: linear-gradient(135deg, #fbbf24, #ff6b9d, #c084fc);
+            color: white;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 1;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 30px rgba(251, 191, 36, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        #surprise-link:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ff6b9d;
+            position: absolute;
+            animation: confettiFall 3s linear infinite;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            #app-container {
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .header-wrapper {
+                max-width: 100%;
+                border-radius: 0;
+            }
+
+            .header-content {
+                padding: 2rem 1.5rem 1.5rem 1.5rem;
+                min-height: 260px;
+                /* Reduced for mobile */
+            }
+
+            .nav-wrapper {
+                max-width: 100%;
+                border-radius: 0;
+                min-height: 85px;
+                /* Slightly reduced for mobile */
+            }
+
+            .nav-bar {
+                padding: 1rem 0.25rem;
+            }
+
+            .main-heading {
+                font-size: 2rem;
+                /* Reduced from 2.25rem */
+            }
+
+            .sub-heading {
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+            }
+
+            .theme-title {
+                font-size: 1.1rem;
+                margin-top: 0.5rem;
+            }
+
+            #content-container {
+                margin-top: 280px;
+                /* Reduced for mobile */
+                margin-bottom: 95px;
+                padding: 1.5rem 1rem;
+                /* Reduced padding */
+            }
+
+            .countdown-timer {
+                margin-top: 1rem;
+                gap: 0.25rem;
+            }
+
+            .countdown-value {
+                font-size: 2rem;
+                /* Reduced from 2.25rem */
+            }
+
+            .countdown-segment {
+                padding: 0.5rem 0.25rem;
+                min-width: 50px;
+            }
+
+            .countdown-label {
+                font-size: 0.65rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .card-title {
+                font-size: 1.75rem;
+            }
+
+            .card-text {
+                font-size: 1rem;
+            }
+
+            .garden-plot {
+                width: 280px;
+                height: 280px;
+            }
+
+            .heart-piece {
+                transform-origin: 140px 140px;
+            }
+
+            .respect-cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 1rem;
+                /* Reduced gap for mobile */
+            }
+
+            .respect-card {
+                min-height: 120px;
+                /* Reduced for mobile */
+                padding: 1.25rem;
+            }
+
+            .respect-text {
+                font-size: 0.9rem;
+            }
+
+            .respect-icon {
+                font-size: 1.75rem;
+            }
+
+            .respect-number {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+
+            .audio-player {
+                padding: 1.5rem;
+            }
+
+            .song-title {
+                font-size: 1.75rem;
+            }
+
+            .heart-play-btn {
+                width: 80px;
+                height: 80px;
+            }
+
+            .heart-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 360px) {
+            .header-content {
+                padding: 1.5rem 1rem;
+                min-height: 240px;
+            }
+
+            #content-container {
+                margin-top: 260px;
+                padding: 1rem 0.75rem;
+            }
+
+            .respect-cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 0.75rem;
+            }
+
+            .respect-card {
+                min-height: 110px;
+                padding: 1rem;
+            }
+
+            .countdown-value {
+                font-size: 1.75rem;
+            }
+
+            .main-heading {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Magic Room - Growing Beating Heart */
+        .magic-heart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .growing-heart {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.8));
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .heart-svg {
+            width: 60px;
+            height: 60px;
+            fill: #ff6b9d;
+            animation: heartbeat 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.9));
+            transition: all 0.5s ease;
+        }
+
+        .heart-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                    rgba(255, 107, 157, 0.6) 0%,
+                    rgba(192, 132, 252, 0.4) 30%,
+                    rgba(251, 191, 36, 0.2) 60%,
+                    transparent 100%);
+            animation: pulseGlow 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .heart-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .heart-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff6b9d;
+            border-radius: 50%;
+            animation: floatParticle 3s ease-in-out infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.9));
+            }
+
+            10% {
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 25px rgba(255, 107, 157, 1));
+            }
+
+            20% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.9));
+            }
+
+            30% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 22px rgba(255, 107, 157, 0.95));
+            }
+
+            50% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 15px rgba(255, 107, 157, 0.9));
+            }
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+
+            90% {
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translate(calc(var(--random-x) * 100px),
+                        calc(var(--random-y) * 100px)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .heart-day-info {
+            margin-top: 2rem;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 15px rgba(255, 107, 157, 0.5);
+        }
+
+        .heart-size-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Video Player Section */
+        .magic-video-container {
+            margin-top: 2rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .video-toggle-btn {
+            padding: 0.9rem 2rem;
+            background: linear-gradient(135deg, #e7a7b8, #d7c8f6);
+            color: #111;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.4px;
+        }
+
+        .video-toggle-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .video-toggle-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .video-toggle-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+        }
+
+        .video-toggle-btn:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .magic-video-wrapper {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(10, 8, 14, 0.55);
+            backdrop-filter: blur(12px) saturate(120%);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+            display: none;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .video-playlist {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-start;
+        }
+
+        .video-playlist button {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s ease;
+        }
+
+        .video-playlist button:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 107, 157, 0.12);
+        }
+
+        .magic-video-wrapper.show {
+            display: block;
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            z-index: 1050;
+            animation: videoFadeIn 0.5s ease-out forwards;
+        }
+
+        /* Romantic popup animation for video */
+        .magic-video-wrapper.romantic-popup {
+            animation: romanticPopup 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transform-origin: center center;
+        }
+
+        @keyframes romanticPopup {
+            0% {
+                opacity: 0;
+                transform: scale(0.6) translateY(20px) rotate(-4deg);
+                filter: blur(6px);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.05) translateY(-6px) rotate(2deg);
+                filter: blur(0px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0px) rotate(0deg);
+                filter: blur(0px);
+            }
+        }
+
+        /* Modal inner styling for video */
+        .magic-video-wrapper .magic-video {
+            width: 100%;
+            max-width: min(92vw, 900px);
+            max-height: min(86vh, 720px);
+            height: auto;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transform-origin: center center;
+            background: #000;
+            object-fit: contain;
+        }
+
+        .magic-video-wrapper .cinematic-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(6, 4, 10, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: -1;
+        }
+
+        .magic-video-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1060;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            transition: transform 160ms ease, background 160ms;
+        }
+
+        .magic-video-close:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        @keyframes videoFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Video overlay (autoplay fallback) */
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.6));
+            border-radius: 12px;
+            z-index: 5;
+            pointer-events: auto;
+        }
+
+        .video-overlay .play-btn {
+            padding: 0.8rem 1.4rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #e7a7b8, #d7c8f6);
+            color: #111;
+            font-weight: 700;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Playlist button states */
+        .video-playlist button.unlocked {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .video-playlist button.locked {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* Melody playlist shares same look as video playlist */
+        .audio-playlist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-start; }
+        .audio-playlist button { background: rgba(255, 255, 255, 0.06); color: #fff; border: 1px solid rgba(255, 255, 255, 0.08); padding: 6px 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: transform 0.12s ease, background 0.12s ease; }
+        .audio-playlist button:hover { transform: translateY(-3px); background: rgba(255, 107, 157, 0.12); }
+        .audio-playlist button.unlocked { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.18); color: #fff; transform: translateY(-2px); }
+        .audio-playlist button.locked { opacity: 0.45; cursor: not-allowed; }
+
+        /* Simulate button style (small) */
+        .video-sim-btn {
+            padding: 0.6rem 1rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #fbbf24, #ff6b9d);
+            color: white;
+            border: none;
+            margin-left: 0.6rem;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .magic-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 20px;
+        }
+
+        .video-day-info {
+            text-align: center;
+            margin-top: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .video-day-number {
+            font-weight: 700;
+            background: linear-gradient(135deg, #fbbf24, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Responsive adjustments for Magic Room */
+        @media (max-width: 480px) {
+            .magic-heart-container {
+                padding: 2rem 1rem;
+                min-height: 300px;
+            }
+
+            .heart-day-info {
+                font-size: 1.1rem;
+                margin-top: 1.5rem;
+            }
+
+            .magic-video-container {
+                margin-top: 2rem;
+            }
+
+            .video-toggle-btn {
+                padding: 0.875rem 2rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Melodies Section */
+        .melodies-intro {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(12px) saturate(120%);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .melodies-intro::before {
+            content: '';
+            display: none;
+        }
+
+        .melodies-intro:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .melodies-intro:hover::before {
+            left: 100%;
+        }
+
+        .melodies-intro .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .melodies-intro .card-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        /* Music Particles */
+        .music-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .music-note,
+        .floating-heart {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: floatUp 6s ease-in-out infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100%) rotate(0deg) scale(0.5);
+            }
+
+            10% {
+                opacity: 0.8;
+            }
+
+            90% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100%) rotate(360deg) scale(1.2);
+            }
+        }
+
+        /* Heart Speaking Label */
+        .heart-speaking-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            text-transform: lowercase;
+            letter-spacing: 2px;
+            animation: gentleFade 3s ease-in-out infinite;
+        }
+
+        @keyframes gentleFade {
+
+            0%,
+            100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Melodies Section */
+        .melodies-intro {
+            margin-bottom: 2rem;
+        }
+
+        .melodies-intro .card-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Enhanced Audio Player - Heart Speaking Design */
+        .audio-player {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 2.5rem 2rem;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(16px) saturate(120%);
+        }
+
+        .audio-player::before {
+            content: '';
+            display: none;
+        }
+
+        @keyframes rotateGlow {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .audio-player.playing {
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.01);
+        }
+
+        @keyframes playerPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 60px rgba(255, 107, 157, 0.7),
+                    0 0 100px rgba(192, 132, 252, 0.5),
+                    0 0 140px rgba(251, 191, 36, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 80px rgba(255, 107, 157, 0.9),
+                    0 0 130px rgba(192, 132, 252, 0.7),
+                    0 0 180px rgba(251, 191, 36, 0.5);
+            }
+        }
+
+        .player-display {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .heart-speaking-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+            text-transform: lowercase;
+            letter-spacing: 2px;
+            animation: gentleFade 3s ease-in-out infinite;
+        }
+
+        @keyframes gentleFade {
+
+            0%,
+            100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .song-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #fff;
+            transition: opacity 0.4s ease;
+            margin-bottom: 0.75rem;
+            position: relative;
+            line-height: 1.2;
+        }
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 10px rgba(255, 107, 157, 0.5));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.8)) drop-shadow(0 0 30px rgba(192, 132, 252, 0.6));
+            }
+        }
+
+        .song-artist {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            margin: 2rem 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .heart-play-btn {
+            width: 96px;
+            height: 96px;
+            background: linear-gradient(135deg, #e7a7b8, #d7c8f6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 1;
+        }
+
+        .heart-play-btn::before {
+            content: '';
+            display: none;
+        }
+
+        @keyframes heartRipple {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.3);
+            }
+        }
+
+        .heart-play-btn:hover::before {
+            opacity: 0.7;
+            transform: scale(1.4);
+        }
+
+        .heart-play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        }
+
+        .heart-play-btn.playing {
+            transform: scale(1.03);
+        }
+
+        .heart-play-btn.playing::before {
+            animation: heartRipple 1.2s ease-in-out infinite;
+        }
+
+        @keyframes heartbeatStrong {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(255, 107, 157, 0.7),
+                    0 0 30px rgba(192, 132, 252, 0.5);
+            }
+
+            12% {
+                transform: scale(1.2);
+                box-shadow: 0 15px 60px rgba(255, 107, 157, 1),
+                    0 0 50px rgba(192, 132, 252, 0.8);
+            }
+
+            24% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(255, 107, 157, 0.7),
+                    0 0 30px rgba(192, 132, 252, 0.5);
+            }
+
+            36% {
+                transform: scale(1.15);
+                box-shadow: 0 13px 50px rgba(255, 107, 157, 0.9),
+                    0 0 40px rgba(192, 132, 252, 0.7);
+            }
+
+            60% {
+                transform: scale(1);
+                box-shadow: 0 10px 40px rgba(255, 107, 157, 0.7),
+                    0 0 30px rgba(192, 132, 252, 0.5);
+            }
+        }
+
+        .heart-icon {
+            width: 48px;
+            height: 48px;
+            fill: white;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+            transition: transform 0.3s ease;
+        }
+
+        .heart-play-btn:hover .heart-icon {
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: height 0.2s ease;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-bar:hover {
+            height: 14px;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3),
+                0 0 15px rgba(255, 107, 157, 0.4);
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #e7a7b8 0%, #d7c8f6 100%);
+            border-radius: 12px;
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress::after {
+            content: '';
+            display: none;
+        }
+
+        @keyframes progressShine {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .song-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .song-counter {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .next-unlock {
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 1.25rem 2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .unlock-time {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        /* Floating Music Elements */
+        .music-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .music-note,
+        .floating-heart {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: floatUp 6s ease-in-out infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100%) rotate(0deg) scale(0.5);
+            }
+
+            10% {
+                opacity: 0.8;
+            }
+
+            90% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100%) rotate(360deg) scale(1.2);
+            }
+        }
+
+        /* Responsive adjustments for Melodies */
+        @media (max-width: 768px) {
+            .audio-player {
+                padding: 2rem 1.5rem;
+                border-radius: 24px;
+            }
+
+            .song-title {
+                font-size: 2rem;
+            }
+
+            .song-artist {
+                font-size: 1.05rem;
+            }
+
+            .heart-play-btn {
+                width: 88px;
+                height: 88px;
+            }
+
+            .heart-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .song-counter {
+                font-size: 1.2rem;
+                padding: 0.75rem 1.5rem;
+            }
+
+            .next-unlock {
+                font-size: 0.95rem;
+                padding: 1rem 1.5rem;
+            }
+
+            .unlock-time {
+                font-size: 1.05rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .audio-player {
+                padding: 1.75rem 1.25rem;
+                border-radius: 22px;
+            }
+
+            .song-title {
+                font-size: 1.9rem;
+            }
+
+            .song-artist {
+                font-size: 1rem;
+            }
+
+            .heart-play-btn {
+                width: 80px;
+                height: 80px;
+            }
+
+            .heart-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .song-counter {
+                font-size: 1.1rem;
+                padding: 0.6rem 1.25rem;
+            }
+
+            .next-unlock {
+                font-size: 0.9rem;
+                padding: 0.9rem 1.25rem;
+            }
+
+            .unlock-time {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Gradient Background -->
+    <div id="animated-bg"></div>
+
+    <!-- Canvas for confetti & particles -->
+    <canvas id="confetti-canvas" aria-hidden="true"
+        style="position:fixed; inset:0; pointer-events:none; z-index:9999;"></canvas>
+
+    <!-- Romantic Login Modal -->
+    <div id="romantic-login" class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog"
+        aria-modal="true" aria-labelledby="login-title">
+        <div id="romantic-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md mx-auto">
+            <div id="login-card" class="rounded-2xl overflow-hidden border-2"
+                style="border-color: rgba(255,255,255,0.12);">
+                <div class="p-6"
+                    style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));">
+                    <div class="text-center mb-4">
+                        <div id="login-title" class="text-2xl font-serif text-white" style="letter-spacing: -0.5px;">💗
+                            <span class="sr-only">Hey Cupcake</span><span
+                                style="font-family: 'Playfair Display', serif;">Hey Cupcake</span></div>
+                        <p class="mt-2 text-sm text-white/85">A soft whisper before what you opened for...</p>
+                    </div>
+
+                    <form id="love-form" class="space-y-4" onsubmit="return false;">
+                        <div>
+                            <label for="secret" class="block text-sm font-semibold text-white">🔐 Password</label>
+                            <input id="secret" name="secret" type="password" placeholder="Enter the secret code"
+                                autocomplete="off"
+                                class="mt-2 w-full rounded-xl p-3 bg-white/5 text-white border border-white/10 focus:outline-none" />
+                        </div>
+
+                        <div>
+                            <label for="choice" class="block text-sm font-semibold text-white">Options</label>
+                            <select id="choice"
+                                class="mt-2 w-full rounded-xl p-3 bg-white/5 text-white border border-white/10">
+                                <option value="opt1">red color aur wo 😍</option>
+                                <option value="opt2">shuuu cant talk here my employees watching 🙂‍↔️</option>
+                                <option value="opt3">pooraa dekha .....hanjiii 🤗</option>
+                                <option value="opt4">it's not cook what you did .....😏</option>
+                                <option value="opt5">dont smile front my mam (only I can ,coz she's looking at u not
+                                    me)🥱</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-2">
+                            <button id="login-btn" class="w-full btn btn-primary rounded-xl text-lg">❤️ Open My
+                                Heart.</button>
+                        </div>
+                    </form>
+
+                    <div id="login-feedback" class="mt-4 text-center text-white text-sm" aria-live="polite"></div>
+                </div>
+
+                <div class="px-6 py-4 text-center bg-gradient-to-t from-white/3 to-transparent">
+                    <div id="login-footer" class="text-xs text-white/80">Made with pure heart & Privacy 💕</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Romantic Login Styles (theme-aware) */
+        @media (prefers-color-scheme: dark) {
+            #login-card {
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            #login-card {
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            }
+
+            #romantic-backdrop {
+                background: rgba(255, 255, 255, 0.6);
+            }
+
+            #login-card .p-6 {
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95));
+            }
+
+            #login-card input,
+            #login-card select {
+                background: white;
+                color: #111;
+            }
+
+            #login-card .text-2xl {
+                color: #7b1fa2;
+            }
+        }
+
+        /* Heart burst animation */
+        @keyframes heartPop {
+            0% {
+                transform: scale(0.6);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        .heart-burst {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: none;
+        }
+
+        /* Lighting overlay variables and classes */
+        :root {
+            --lighting-opacity: 0;
+            --lighting-color: rgba(255, 107, 157, 0.18);
+            --light-x: 50%;
+            --light-y: 40%;
+        }
+
+        #animated-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--light-x) var(--light-y), var(--lighting-color) 0%, transparent 35%);
+            opacity: var(--lighting-opacity);
+            transition: opacity 360ms ease, transform 360ms ease;
+            z-index: -1;
+        }
+
+        #animated-bg.warm-glow {
+            filter: brightness(1.08) saturate(1.08);
+        }
+
+        #animated-bg.warm-glow::after {
+            opacity: 1;
+        }
+
+        #animated-bg.interactive-glow {
+            filter: brightness(1.15) saturate(1.12) contrast(1.02);
+        }
+
+        /* Cinematic overlay styles */
+        .cinematic-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(8, 6, 16, 0.6);
+            opacity: 0;
+            transition: opacity 420ms ease;
+            z-index: 9998;
+            backdrop-filter: blur(6px) saturate(1.05);
+        }
+
+        .cinematic-overlay.show {
+            opacity: 1;
+        }
+
+        .cinematic-spotlight {
+            width: min(720px, 92%);
+            max-width: 920px;
+            border-radius: 18px;
+            padding: 2.25rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 80px rgba(255, 107, 157, 0.08) inset;
+            transform: translateY(24px) scale(0.98);
+            opacity: 0;
+            transition: transform 520ms cubic-bezier(.16, 1, .3, 1), opacity 520ms;
+        }
+
+        .cinematic-overlay.show .cinematic-spotlight {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .cinematic-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .cinematic-sub {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .cinematic-spotlight .btn {
+            min-width: 120px;
+        }
+
+        /* Romantic enhancements */
+        .romantic-overlay .cinematic-spotlight {
+            backdrop-filter: blur(8px) saturate(1.02);
+            border-radius: 20px;
+        }
+
+        .romantic-card {
+            padding: 1rem 1.25rem;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .romantic-msg {
+            margin-top: 14px;
+            color: rgba(255, 235, 243, 0.95);
+            font-size: 1rem;
+            line-height: 1.5;
+            min-height: 48px;
+        }
+
+        .romantic-mode .cinematic-spotlight {
+            transform-origin: center;
+            animation: softZoom 9s ease-in-out infinite;
+        }
+
+        @keyframes softZoom {
+            0% {
+                transform: scale(1)
+            }
+
+            50% {
+                transform: scale(1.01)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        /* Petal stage and petals */
+        .petal-stage {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 9997;
+        }
+
+        .petal {
+            position: absolute;
+            top: -6vh;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #ff9ac2, #ff6f9b);
+            border-radius: 4px;
+            transform: rotate(15deg);
+            opacity: 0.9;
+            animation: petalFall 6s linear forwards;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+        }
+
+        @keyframes petalFall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+            }
+
+            40% {
+                transform: translateY(30vh) rotate(40deg);
+            }
+
+            70% {
+                transform: translateY(65vh) rotate(85deg);
+            }
+
+            100% {
+                transform: translateY(110vh) rotate(140deg);
+                opacity: 0.02;
+            }
+        }
+
+        /* Kiss pulse (brief highlight) */
+        .kiss-pulse .cinematic-spotlight {
+            box-shadow: 0 40px 120px rgba(255, 90, 140, 0.18), 0 0 140px rgba(255, 107, 157, 0.06) inset;
+            transform: scale(1.01);
+        }
+
+        /* small accessibility niceties */
+        .cinematic-spotlight button:focus {
+            outline: 3px solid rgba(255, 200, 220, 0.22);
+            outline-offset: 4px;
+        }
+
+        /* App hidden state while modal active */
+        #app-container[aria-hidden="true"] {
+            filter: blur(6px) saturate(0.9);
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.85;
+        }
+
+        /* Confetti pieces */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 14px;
+            opacity: 0.95;
+            top: -10vh;
+            z-index: 9999;
+            transform: rotate(0deg);
+            will-change: transform, top;
+            border-radius: 2px;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0.9;
+            }
+        }
+
+        /* Make heart bursts longer and more graceful */
+        .music-heart {
+            transition: transform 2200ms cubic-bezier(.2, .9, .2, 1), opacity 2200ms;
+        }
+
+        /* Simple shake for failure */
+        @keyframes shakeX {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-6px);
+            }
+
+            50% {
+                transform: translateX(6px);
+            }
+
+            75% {
+                transform: translateX(-4px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .shake {
+            animation: shakeX 480ms ease;
+        }
+    </style>
+
+    <!-- Main App Container (gated until login) -->
+    <div id="app-container" aria-hidden="true" tabindex="-1">
+
+        <!-- Fixed Header Wrapper -->
+        <div class="header-wrapper">
+            <!-- Header -->
+            <header class="header-content">
+                <h1 class="main-heading">25 <span id="slider"></span> All For You</h1>
+                <p class="sub-heading">A small surprise is waiting — <strong id="birthday-date">Dec 25,
+                        00:01</strong>.</p>
+                <p id="theme-title" class="theme-title"></p>
+
+                <!-- Countdown Timer -->
+                <div id="countdown-timer">
+                    <div class="countdown-segment">
+                        <div class="countdown-value" id="days">00</div>
+                        <div class="countdown-label">Days</div>
+                    </div>
+                    <div class="countdown-segment">
+                        <div class="countdown-value" id="hours">00</div>
+                        <div class="countdown-label">Hours</div>
+                    </div>
+                    <div class="countdown-segment">
+                        <div class="countdown-value" id="minutes">00</div>
+                        <div class="countdown-label">Minutes</div>
+                    </div>
+                    <div class="countdown-segment">
+                        <div class="countdown-value" id="seconds">00</div>
+                        <div class="countdown-label">Seconds</div>
+                    </div>
+                </div>
+
+                <!-- Hidden Surprise Message -->
+                <div id="reveal-message" class="hidden mt-6">
+                    <h2>🎉 HAPPY BIRTHDAY! 🎉</h2>
+                    <p>The moment is here! Check out 'The Surprise' tab!</p>
+                </div>
+            </header>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="content-container">
+
+            <!-- Content Sections -->
+            <div id="Heartspace" class="content-section active">
+                <!-- Respect Cards Grid -->
+                <div class="respect-cards-container" id="respect-cards-container">
+                    <!-- Cards will be generated by JavaScript -->
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="respect-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-fill" id="respect-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="progress-text">
+                        <span id="unlocked-count">0</span> of 25 unlocked
+                    </p>
+                </div>
+            </div>
+
+            <div id="Melodies" class="content-section">
+                <!-- Romantic Intro -->
+
+                <!-- Enhanced Audio Player -->
+                <div class="audio-player" id="audio-player">
+                    <div class="music-particles" id="music-particles"></div>
+
+                    <div class="player-display">
+                        <div class="heart-speaking-label" id="heart-speaking-label">
+                            💖 my heart is speaking 💖
+                        </div>
+                        <div class="song-title" id="current-song-title">A Song For Your Heart...</div>
+                        <div class="song-artist" id="current-song-artist">A new melody unlocks at 11:11 AM</div>
+                    </div>
+
+                    <div class="song-info">
+                        <div class="song-counter">
+                            Melody <span id="song-number">1</span> of 25
+                        </div>
+                    </div>
+
+                    <div class="player-controls">
+                        <div class="heart-play-btn" id="play-btn">
+                            <svg class="heart-icon" id="play-icon" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 5.41 2 8.5 2c1.74 0 3.41.81 4.5 2.08C13.09 2.81 14.76 2 16.5 2 19.58 2 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+                            </svg>
+                            <svg class="heart-icon hidden" id="pause-icon" viewBox="0 0 24 24">
+                                <path d="M14,19H18V5H14M6,19H10V5H6V19Z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+
+                    <div class="next-unlock">
+                        <p> click on this heart to play melody every day</p>
+                        Next melody unlocks in: <span class="unlock-time" id="unlock-time">11:11 AM</span>
+                    </div>
+                    <!-- Melody playlist: clickable buttons for Day 1..25 (populated by JS) -->
+                    <div id="melody-playlist" class="audio-playlist" aria-label="Melody playlist"></div>
+                </div>
+            </div>
+
+            <div id="MagicRoom" class="content-section">
+                <div class="glass-card card-hover">
+                    <h2 class="card-title">Magic Room 💖</h2>
+                    <p class="card-text">
+                        Every day adds a new sparkle to love…
+                        little heart grows bigger, warmer, and softer.
+                        And on day 25, it will become the biggest,
+                        cutest heart—just for you...💗🥺
+                    </p>
+                </div>
+
+                <!-- Growing Beating Heart -->
+                <div class="glass-card card-hover">
+                    <div class="magic-heart-container">
+                        <div class="growing-heart" id="growing-heart">
+                            <div class="heart-glow"></div>
+                            <svg class="heart-svg" id="heart-svg" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 5.41 2 8.5 2c1.74 0 3.41.81 4.5 2.08C13.09 2.81 14.76 2 16.5 2 19.58 2 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+                            </svg>
+                            <div class="heart-particles" id="heart-particles"></div>
+                        </div>
+                        <div class="heart-day-info">
+                            Day <span id="heart-day-number">1</span> of Love
+                            <div class="heart-size-text" id="heart-size-text">Growing with each moment...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Player Section -->
+                <div class="glass-card card-hover">
+                    <div class="magic-video-container">
+                        <button class="video-toggle-btn" id="video-toggle-btn">
+                            <span id="video-btn-text">💕 Watch Today's Video 💕</span>
+                        </button>
+                        <button id="simulate-next-day-btn" class="video-sim-btn"
+                            title="Simulate next day (testing)">Simulate Next Day</button>
+                        <div class="magic-video-wrapper" id="magic-video-wrapper" role="dialog" aria-modal="true"
+                            aria-hidden="true">
+                            <div class="cinematic-backdrop" aria-hidden="true"></div>
+                            <button class="magic-video-close" id="magic-video-close" aria-label="Close video">✕</button>
+                            <video class="magic-video" id="magic-video" controls playsinline preload="metadata">
+                                <source id="video-source" src="1.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div id="video-overlay" class="video-overlay hidden">
+                                <button id="video-overlay-play" class="play-btn">▶️ Play Video</button>
+                            </div>
+                            <div class="video-day-info">
+                                Video <span class="video-day-number" id="video-day-number">1</span> of 25
+                            </div>
+                        </div>
+                        <div class="next-unlock">
+                            Next unlocks in: <span class="unlock-time" id="video-unlock-time">11:11 PM</span>
+                        </div>
+                        <!-- Playlist: clickable buttons for Day 1..25 (populated by JS) -->
+                        <div id="video-playlist" class="video-playlist" aria-label="Video playlist"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="TheSurprise" class="content-section">
+                <div class="glass-card card-hover">
+                    <h2 class="card-title">The Surprise 🎁</h2>
+                    <p class="card-text">
+                        Aur ab… woh sabse khaas surprise.
+                        Jo waqt ke khatam hote hi…
+                        Mere Dil ki tarah tumhare Liye khul jaayega ❤️
+                    </p>
+                </div>
+
+                <!-- Locked message initially visible -->
+                <div id="locked-message" class="glass-card text-center">
+                    <i class="fas fa-lock text-4xl text-soft-pink mb-4"></i>
+                    <p class="mt-2 text-xl font-semibold text-soft-pink">Content Locked</p>
+                    <p class="text-sm text-white">Check back when the countdown hits zero!</p>
+                </div>
+
+                <!-- Actual surprise content (initially hidden) -->
+                <div id="surprise-details" class="hidden">
+                    <h3>Your Grand Gift Awaits!</h3>
+                    <p>Happy Birthday, beautiful Soul.</p>
+
+                    <a href="https://heycupcake.netlify.app" id="surprise-link">
+                        🎁 Open Your Surprise
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Fixed Navigation Bar -->
+        <div class="nav-wrapper">
+            <nav class="nav-bar">
+                <button id="nav-Heartspace" data-target="Heartspace" class="nav-button active">
+                    <i class="fas fa-heart nav-icon"></i>
+                    <span class="nav-label">Heartspace</span>
+                </button>
+                <button id="nav-Melodies" data-target="Melodies" class="nav-button">
+                    <i class="fas fa-music nav-icon"></i>
+                    <span class="nav-label">Melodies</span>
+                </button>
+                <button id="nav-MagicRoom" data-target="MagicRoom" class="nav-button">
+                    <i class="fas fa-magic nav-icon"></i>
+                    <span class="nav-label">Magic Room</span>
+                </button>
+                <button id="nav-TheSurprise" data-target="TheSurprise" class="nav-button">
+                    <i class="fas fa-gift nav-icon"></i>
+                    <span class="nav-label">The Surprise</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        // Respect messages data
+        const respectMessages = [
+            { text: "I respect how grounded you are", icon: "🌱" },
+            { text: "I respect your space", icon: "🏡" },
+            { text: "I respect your silence", icon: "🤫" },
+            { text: "I respect your choices", icon: "🛤️" },
+            { text: "I respect how you handle life", icon: "⚖️" },
+            { text: "I respect your boundaries", icon: "🚧" },
+            { text: "I respect your kindness", icon: "💝" },
+            { text: "I respect your time", icon: "⏰" },
+            { text: "I respect your dreams", icon: "✨" },
+            { text: "I respect your growth", icon: "🌿" },
+            { text: "I respect your opinions", icon: "💭" },
+            { text: "I respect your emotions", icon: "💫" },
+            { text: "I respect your patience", icon: "⏳" },
+            { text: "I respect your loyalty", icon: "🤝" },
+            { text: "I respect your standards", icon: "📏" },
+            { text: "I respect your honesty", icon: "🔍" },
+            { text: "I respect your journey", icon: "🗺️" },
+            { text: "I respect your intelligence", icon: "🧠" },
+            { text: "I respect your calmness", icon: "🌊" },
+            { text: "I respect your ambition", icon: "🎯" },
+            { text: "I respect your softness", icon: "☁️" },
+            { text: "I respect how you protect your heart", icon: "🛡️" },
+            { text: "I respect your independence", icon: "🦋" },
+            { text: "I respect your authenticity", icon: "🎭" },
+            { text: "And lastly… I respect you", icon: "💖" }
+        ];
+
+        // Daily themes
+        const themes = [
+            { title: "Day 1: First Spark", gradient1: "#0b0410", gradient2: "#1a0a20" },
+            { title: "Day 2: Sweet Whispers", gradient1: "#1a0a20", gradient2: "#2a0a30" },
+            { title: "Day 3: Golden Moments", gradient1: "#2a0a30", gradient2: "#3a1a20" },
+            { title: "Day 4: Deep Ocean", gradient1: "#3a1a20", gradient2: "#0a2a40" },
+            { title: "Day 5: Rose Garden", gradient1: "#0a2a40", gradient2: "#2a0a20" },
+            { title: "Day 6: Starry Night", gradient1: "#2a0a20", gradient2: "#0a0a2a" },
+            { title: "Day 7: Morning Dew", gradient1: "#0a0a2a", gradient2: "#1a2a1a" },
+            { title: "Day 8: Sunset Dreams", gradient1: "#1a2a1a", gradient2: "#2a1a3a" },
+            { title: "Day 9: Moonlight Dance", gradient1: "#2a1a3a", gradient2: "#1a1a3a" },
+            { title: "Day 10: Cherry Blossoms", gradient1: "#1a1a3a", gradient2: "#3a1a2a" },
+            { title: "Day 11: Ocean Waves", gradient1: "#3a1a2a", gradient2: "#0a2a3a" },
+            { title: "Day 12: Autumn Leaves", gradient1: "#0a2a3a", gradient2: "#2a1a0a" },
+            { title: "Day 13: Crystal Clear", gradient1: "#2a1a0a", gradient2: "#1a2a3a" },
+            { title: "Day 14: Velvet Touch", gradient1: "#1a2a3a", gradient2: "#2a0a2a" },
+            { title: "Day 15: Northern Lights", gradient1: "#2a0a2a", gradient2: "#0a2a1a" },
+            { title: "Day 16: Spring Bloom", gradient1: "#0a2a1a", gradient2: "#1a0a2a" },
+            { title: "Day 17: Midnight Blue", gradient1: "#1a0a2a", gradient2: "#0a1a2a" },
+            { title: "Day 18: Pearl White", gradient1: "#0a1a2a", gradient2: "#2a1a1a" },
+            { title: "Day 19: Ruby Red", gradient1: "#2a1a1a", gradient2: "#1a0a1a" },
+            { title: "Day 20: Emerald Green", gradient1: "#1a0a1a", gradient2: "#0a1a0a" },
+            { title: "Day 21: Diamond Sparkle", gradient1: "#0a1a0a", gradient2: "#1a2a0a" },
+            { title: "Day 22: Amber Glow", gradient1: "#1a2a0a", gradient2: "#2a0a1a" },
+            { title: "Day 23: Lavender Dreams", gradient1: "#2a0a1a", gradient2: "#1a1a0a" },
+            { title: "Day 24: Silver Moon", gradient1: "#1a1a0a", gradient2: "#0a0a1a" },
+            { title: "Day 25: Eternal Love", gradient1: "#0a0a1a", gradient2: "#0b0410" }
+        ];
+
+        // --- Audio Player Data ---
+        const AUDIO_PATH = ''; // Leave empty if files are in same folder, or use 'songs/', 'audio/', etc.
+
+        const songs = [
+            { title: "Tu hi ye mujhko bata de", artist: "The Chahun main ya naa", src: `${AUDIO_PATH}1.mp3` },
+            { title: "Sweet Raaz Yeh Kaise Khol Rahi Ho,", artist: "Tum Aankhon se bol rahi Ho ", src: `${AUDIO_PATH}2.mp3` },
+            { title: "Muskura ke dekha tu ne", artist: "Deevaane par ehsaan kiya", src: `${AUDIO_PATH}3.mp3` },
+            { title: "Tumhara mera milna ", artist: "likha to hoga kahin", src: `${AUDIO_PATH}4.mp3` },
+            { title: "Ye dil bekaraar", artist: "kare ki nahi", src: `${AUDIO_PATH}5.mp3` },
+            { title: "Kuch din se mujhe", artist: "Teri aadat ho gayi hai", src: `${AUDIO_PATH}6.mp3` },
+            { title: "Tu mera koi na", artist: "hoke bhi kuch laage", src: `${AUDIO_PATH}7.mp3` },
+            { title: "Dekha Hazaron Dafa Aapko", artist: "Phir Beqarari Kaisi Hai", src: `${AUDIO_PATH}8.mp3` },
+            { title: "Teri nazar ne yeh kya kar diya", artist: "Mujhse hi mujhko juda kar diya", src: `${AUDIO_PATH}9.mp3` },
+            { title: "Tere chehre pe", artist: "main ruk gaya", src: `${AUDIO_PATH}10.mp3` },
+            { title: "Par Wada Hai Ye Kasam Se", artist: "Tere Saath Main Rahoonga", src: `${AUDIO_PATH}11.mp3` },
+            { title: "Idhar nahi, udhar nahi", artist: "Yeh Bhi Hasne Laga Tha", src: `${AUDIO_PATH}12.mp3` },
+            { title: "Sachi si hain yeh taarifein", artist: "Dil se jo maine kari hain", src: `${AUDIO_PATH}13.mp3` },
+            { title: "Woh Bhi Hasne Lagi Thi", artist: "Yeh Bhi Hasne Laga Tha", src: `${AUDIO_PATH}14.mp3` },
+            { title: "Tum ek musafir ho", artist: "Main koi raah anjaani", src: `${AUDIO_PATH}15.mp3` },
+            { title: "Tujhe sochta hoon main shaam subah", artist: "Isse zyada tujhe aur chahoon toh kya", src: `${AUDIO_PATH}16.mp3` },
+            { title: "Aaj yoon tujhe milne", artist: "Mohabbat aayi hai", src: `${AUDIO_PATH}17.mp3` },
+            { title: "Kar Na Kabhi Tu", artist: "Mujhe Nazron Se Door", src: `${AUDIO_PATH}18.mp3` },
+            { title: "Kaise mujhe tum mil gayi", artist: "Kismat pe aaye naa yaakeen", src: `${AUDIO_PATH}19.mp3` },
+            { title: "Ho Gaya Hai Tujhka To Pyaar Sajna", artist: "Laakh Karle Tu Inkaar Sajna", src: `${AUDIO_PATH}20.mp3` },
+            { title: "Kar le tu ", artist: "mera yaqeen", src: `${AUDIO_PATH}21.mp3` },
+            { title: "Ho jo barso meri palkon mein tha", artist: "Tu wohi khwaab hai", src: `${AUDIO_PATH}22.mp3` },
+            { title: "Kiska Hai Ye Tumko Intezaar", artist: "Main Hoon Na", src: `${AUDIO_PATH}23.mp3` },
+            { title: "Jis Pal Na Chaha Tujhko", artist: "Us Pal Sajaye Mangi", src: `${AUDIO_PATH}24.mp3` },
+            { title: "Tu yaar nahin tu pyaar nahin", artist: "Tu rooh da rishta puraana", src: `${AUDIO_PATH}25.mp3` }
+        ];
+
+        // Video path (use same pattern as AUDIO_PATH)
+        const VIDEO_PATH = '';
+        const videos = [
+            { title: "First Spark", artist: "The Beginning", src: `${VIDEO_PATH}1.mp4` },
+            { title: "Sweet Whispers", artist: "Our Secret Language", src: `${VIDEO_PATH}2.mp4` },
+            { title: "Golden Moments", artist: "Treasured Memories", src: `${VIDEO_PATH}3.mp4` },
+            { title: "Deep Ocean", artist: "Endless Depths", src: `${VIDEO_PATH}4.mp4` },
+            { title: "Rose Garden", artist: "Blooming Love", src: `${VIDEO_PATH}5.mp4` },
+            { title: "Starry Night", artist: "Under the Stars", src: `${VIDEO_PATH}6.mp4` },
+            { title: "Morning Dew", artist: "Fresh Beginnings", src: `${VIDEO_PATH}7.mp4` },
+            { title: "Sunset Dreams", artist: "Golden Horizons", src: `${VIDEO_PATH}8.mp4` },
+            { title: "Moonlight Dance", artist: "In the Dark", src: `${VIDEO_PATH}9.mp4` },
+            { title: "Cherry Blossoms", artist: "Fleeting Beauty", src: `${VIDEO_PATH}10.mp4` },
+            { title: "Ocean Waves", artist: "Rhythmic Motion", src: `${VIDEO_PATH}11.mp4` },
+            { title: "Autumn Leaves", artist: "Falling for You", src: `${VIDEO_PATH}12.mp4` },
+            { title: "Crystal Clear", artist: "Pure Intentions", src: `${VIDEO_PATH}13.mp4` },
+            { title: "Velvet Touch", artist: "Soft Sensations", src: `${VIDEO_PATH}14.mp4` },
+            { title: "Northern Lights", artist: "Dancing Colors", src: `${VIDEO_PATH}15.mp4` },
+            { title: "Spring Bloom", artist: "New Beginnings", src: `${VIDEO_PATH}16.mp4` },
+            { title: "Midnight Blue", artist: "Deep Thoughts", src: `${VIDEO_PATH}17.mp4` },
+            { title: "Pearl White", artist: "Precious Moments", src: `${VIDEO_PATH}18.mp4` },
+            { title: "Ruby Red", artist: "Passionate Heart", src: `${VIDEO_PATH}19.mp4` },
+            { title: "Emerald Green", artist: "Growing Together", src: `${VIDEO_PATH}20.mp4` },
+            { title: "Diamond Sparkle", artist: "Shining Bright", src: `${VIDEO_PATH}21.mp4` },
+            { title: "Amber Glow", artist: "Warm Embrace", src: `${VIDEO_PATH}22.mp4` },
+            { title: "Lavender Dreams", artist: "Peaceful Rest", src: `${VIDEO_PATH}23.mp4` },
+            { title: "Silver Moon", artist: "Night's Reflection", src: `${VIDEO_PATH}24.mp4` },
+            { title: "Eternal Love", artist: "Forever and Always", src: `${VIDEO_PATH}25.mp4` }
+        ];
+
+
+        // SLIDER SCRIPT
+        const words = ["Days", "Ways", "Reasons", "Feelings", "Hopes", "Promises", "Thoughts", "Dreams", "Moments", ""];
+        let i = 0;
+        const slider = document.getElementById("slider");
+
+        function changeWord() {
+            slider.style.opacity = 0;
+            setTimeout(() => {
+                slider.textContent = words[i];
+                slider.style.opacity = 1;
+                i = (i + 1) % words.length;
+            }, 300);
+        }
+        slider.textContent = words[0];
+        setInterval(changeWord, 2000);
+
+        const targetYear = 2025;
+        const targetDate = new Date(2025, 11, 25, 0, 1, 0, 0);
+        const countdownDate = targetDate.getTime();
+        const startDate = new Date(2025, 11, 1, 0, 0, 0, 0);
+
+        // Get DOM elements
+        const daysEl = document.getElementById('days');
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const revealMessageDiv = document.getElementById('reveal-message');
+        const contentSections = document.querySelectorAll('.content-section');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const lockedMessage = document.getElementById('locked-message');
+        const surpriseDetails = document.getElementById('surprise-details');
+        const themeTitle = document.getElementById('theme-title');
+        const animatedBg = document.getElementById('animated-bg');
+        const birthdayDateEl = document.getElementById('birthday-date');
+        const surpriseLink = document.getElementById('surprise-link');
+
+        // Respect Cards DOM elements
+        const respectCardsContainer = document.getElementById('respect-cards-container');
+        const unlockedCountEl = document.getElementById('unlocked-count');
+        const respectProgressFill = document.getElementById('respect-progress-fill');
+
+        // Audio Player DOM elements
+        const audioPlayer = document.getElementById('audio-player');
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const currentSongTitle = document.getElementById('current-song-title');
+        const currentSongArtist = document.getElementById('current-song-artist');
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        const songNumberEl = document.getElementById('song-number');
+        const unlockTimeEl = document.getElementById('unlock-time');
+        const videoUnlockTimeEl = document.getElementById('video-unlock-time');
+
+        // Garden of Hearts DOM elements
+        const gardenPlot = document.getElementById('garden-plot');
+        const piecesFoundEl = document.getElementById('pieces-found');
+        const revealPieceBtn = document.getElementById('reveal-piece-btn');
+        const roseBorder = document.getElementById('rose-border');
+
+        let currentActiveTab = 'Heartspace';
+        let currentTheme = null;
+        let particleInterval;
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        let audio = new Audio(); // Create a single Audio object
+        let timerInterval; // Declare timerInterval in the global scope
+        let songTimerInterval = null; // interval for song unlock countdown (per-second)
+        let videoTimerInterval = null;
+        let lastVideoDay = 0;
+        let lastSongRevealDay = 0;
+        // Developer debug toggle (set to true only for debugging — disabled by default)
+        const DEV_DEBUG = false; // debug disabled (set true locally if troubleshooting)
+
+        // Debug DOM (created here so we can inspect values in the page when DEV_DEBUG = true)
+        if (DEV_DEBUG) {
+            const debugWrap = document.createElement('div');
+            debugWrap.id = 'dev-debug';
+            debugWrap.style.position = 'fixed';
+            debugWrap.style.bottom = '12px';
+            debugWrap.style.right = '12px';
+            debugWrap.style.zIndex = 9999;
+            debugWrap.style.background = 'rgba(0,0,0,0.7)';
+            debugWrap.style.color = 'white';
+            debugWrap.style.padding = '8px';
+            debugWrap.style.borderRadius = '8px';
+            debugWrap.style.fontSize = '12px';
+            debugWrap.innerHTML = '<strong>DEV DEBUG</strong><div id="dev-debug-content">initializing...</div>';
+            document.body.appendChild(debugWrap);
+        }
+        // no simulation — the app now advances melodies automatically
+        let simulatedVideoDay = 0; // for testing — if >0 will act as unlocked day override
+        let unlockedRespects = 0;
+        let isSurpriseUnlocked = false;
+
+        // --- Respect Cards Functions ---
+        function initRespectCards() {
+            // Create all respect cards
+            respectMessages.forEach((respect, index) => {
+                const card = document.createElement('div');
+                card.className = 'respect-card';
+                card.dataset.index = index;
+
+                // Add card number
+                const number = document.createElement('div');
+                number.className = 'respect-number';
+                number.textContent = index + 1;
+
+                // Add icon
+                const icon = document.createElement('div');
+                icon.className = 'respect-icon';
+                icon.textContent = respect.icon;
+
+                // Add text
+                const text = document.createElement('div');
+                text.className = 'respect-text';
+                text.textContent = respect.text;
+
+                // Add locked overlay
+                const lockedOverlay = document.createElement('div');
+                lockedOverlay.className = 'locked-overlay';
+                lockedOverlay.innerHTML = '<div class="lock-icon">🔒</div>';
+
+                card.appendChild(number);
+                card.appendChild(icon);
+                card.appendChild(text);
+                card.appendChild(lockedOverlay);
+
+                respectCardsContainer.appendChild(card);
+            });
+
+            // Check for unlocked respects
+            checkForUnlockedRespects();
+
+            // Set up periodic check
+            setInterval(checkForUnlockedRespects, 60000); // Check every minute
+        }
+
+        function checkForUnlockedRespects() {
+            const now = new Date();
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Calculate how many respects should be unlocked
+            let newUnlockedCount = Math.min(daysSinceStart + 1, 25); // +1 to unlock the first day
+
+            if (newUnlockedCount > unlockedRespects) {
+                // Unlock new cards with animation
+                for (let j = unlockedRespects; j < newUnlockedCount; j++) {
+                    const card = respectCardsContainer.children[j];
+                    setTimeout(() => {
+                        card.classList.add('unlocked');
+                        const lockedOverlay = card.querySelector('.locked-overlay');
+                        if (lockedOverlay) {
+                            lockedOverlay.style.display = 'none';
+                        }
+                    }, (j - unlockedRespects) * 200); // Stagger animations
+                }
+
+                unlockedRespects = newUnlockedCount;
+                updateRespectProgress();
+            }
+        }
+
+        function updateRespectProgress() {
+            const percentage = (unlockedRespects / 25) * 100;
+            respectProgressFill.style.width = `${percentage}%`;
+            unlockedCountEl.textContent = unlockedRespects;
+        }
+
+        // --- Garden of Hearts Functions ---
+        const GARDEN_CHECK_INTERVAL_MS = 1000; // Check for a new piece every 1 second (1000ms)
+        let unlockedPieces = 0;
+        const heartPieces = [];
+
+        function initGarden() {
+            // Guard: garden elements may not exist in some layouts — skip gracefully
+            if (!gardenPlot || !piecesFoundEl) return;
+
+            // Initial check to unlock the first piece immediately for testing
+            checkForHeartPieceUnlock();
+
+            // Set up the periodic check
+            setInterval(checkForHeartPieceUnlock, GARDEN_CHECK_INTERVAL_MS);
+
+            // Set up button listener (only if button exists)
+            if (revealPieceBtn) revealPieceBtn.addEventListener('click', checkForHeartPieceUnlock);
+        }
+
+        function checkForHeartPieceUnlock() {
+            const now = new Date();
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const hoursToday = now.getHours();
+
+            let newUnlockedCount = daysSinceStart;
+            // If it's past 10 AM on the current day, unlock today's piece too
+            if (hoursToday >= 10) {
+                newUnlockedCount++;
+            }
+
+            // Ensure we don't unlock more than 25 pieces
+            newUnlockedCount = Math.min(newUnlockedCount, 25);
+
+            if (newUnlockedCount > unlockedPieces) {
+                unlockedPieces = newUnlockedCount;
+                addHeartPieceToGarden();
+            }
+        }
+
+        function addHeartPieceToGarden() {
+            const piece = document.createElement('div');
+            piece.classList.add('heart-piece');
+
+            // Use emoji instead of SVG for better compatibility
+            piece.textContent = '❤️';
+            piece.style.fontSize = '30px';
+
+            // Calculate position in a circle
+            const angle = (unlockedPieces - 1) * (360 / 25);
+            const radius = 100; // Radius from the center of the plot
+
+            const x = Math.cos(angle * Math.PI / 180) * radius;
+            const y = Math.sin(angle * Math.PI / 180) * radius;
+
+            // Position the piece
+            piece.style.left = `${150 + x}px`; // 150px is to offset from the top-left corner of the plot to its center
+            piece.style.top = `${150 + y}px`;
+
+            if (!gardenPlot) return; // defensive: if element missing, skip
+            gardenPlot.appendChild(piece);
+            heartPieces.push(piece);
+
+            // Fade in the piece
+            setTimeout(() => {
+                piece.style.opacity = '1';
+            }, 100);
+
+            // Update UI
+            piecesFoundEl.textContent = unlockedPieces;
+
+            // Check if this is the final piece
+            if (unlockedPieces === 25) {
+                triggerFinalRoseAnimation();
+            }
+        }
+
+        function triggerFinalRoseAnimation() {
+            // Create the final rose
+            const rose = document.createElement('div');
+            rose.classList.add('final-rose');
+
+            // Use emoji instead of SVG for better compatibility
+            rose.textContent = '🌹';
+            rose.style.fontSize = '50px';
+
+            rose.style.left = '120px'; // Center of the plot
+            rose.style.top = '120px';
+
+            gardenPlot.appendChild(rose);
+
+            // Animate the rose in
+            setTimeout(() => {
+                rose.style.opacity = '1';
+                rose.style.transform = 'scale(1) rotate(360deg)';
+            }, 100);
+
+            // Add the complete class to the garden plot for the final glow
+            gardenPlot.classList.add('complete-heart');
+
+            // Assemble the final heart after a short delay
+            setTimeout(assembleFinalHeart, 1500);
+        }
+
+        function assembleFinalHeart() {
+            heartPieces.forEach((piece, index) => {
+                const angle = index * (360 / 25);
+                const finalRadius = 90; // Move them slightly closer to form a solid heart
+
+                const finalX = Math.cos(angle * Math.PI / 180) * finalRadius;
+                const finalY = Math.sin(angle * Math.PI / 180) * finalRadius;
+
+                piece.style.transform = `translate(${120 + finalX}px, ${120 + finalY}px) scale(1.1)`; // The scale(1.1) is to make them overlap slightly
+                piece.style.transition = `transform 2s cubic-bezier(0.4, 0, 0.2, 1)`;
+                piece.style.transformOrigin = 'center'; // to make the final animation smooth
+            });
+        }
+
+        // --- Audio Player Functions ---
+        function initAudioPlayer() {
+            // Set audio preload
+            audio.preload = 'auto';
+
+            // Add error listener
+            audio.addEventListener('error', function (e) {
+                console.error('Audio error:', e);
+                const currentSrc = audio.src.split('/').pop();
+                currentSongArtist.textContent = `"Could not load: ${currentSrc}. Please ensure the file exists."`;
+                currentSongArtist.style.color = 'rgba(255, 100, 100, 0.9)';
+            });
+
+            updateSongDisplay();
+
+            // Song unlock countdown ticker is initialized in `initialize()` to avoid
+            // any audio-related errors preventing the countdown from updating.
+        }
+
+        function updateSongDisplay(playOnLoad = false) {
+            const song = songs[currentSongIndex];
+            if (!song) return;
+
+            // Update display text
+            currentSongTitle.style.opacity = 0;
+            currentSongArtist.style.opacity = 0;
+            songNumberEl.textContent = currentSongIndex + 1;
+            
+            setTimeout(() => {
+                currentSongTitle.textContent = song.title;
+                currentSongArtist.textContent = `"${song.artist}"`;
+                currentSongTitle.style.opacity = 1;
+                currentSongArtist.style.opacity = 1;
+            }, 250);
+
+            if (playOnLoad) {
+                const audioPath = song.src;
+                console.log('[updateSongDisplay] playing ->', audioPath);
+                try {
+                    audio.src = audioPath;
+                    audio.load();
+                    audio.play().catch(err => { console.warn('Autoplay possibly blocked', err); });
+                    isPlaying = true;
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                    audioPlayer.classList.add('playing');
+                } catch (e) {
+                    console.warn('Failed to play audio', e);
+                }
+            } else {
+                console.log('[updateSongDisplay] initial setup, no play.');
+                isPlaying = false;
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                audioPlayer.classList.remove('playing');
+            }
+        }
+
+        function updateUnlockCountdown() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Set unlock time to 11:11 AM today
+            const todayAt1111AM = new Date(today);
+            todayAt1111AM.setHours(11, 11, 0, 0);
+
+            // Use the same helper to determine how many songs are unlocked now
+            let computedUnlocked = getComputedSongsUnlocked(now);
+
+            // Determine the next unlock based on the startDate + computedUnlocked days at 11:11 AM
+            let nextUnlock = null;
+            if (computedUnlocked < 25) {
+                // Next unlock is always at startDate + computedUnlocked days at 11:11 AM
+                nextUnlock = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + computedUnlocked, 11, 11, 0, 0);
+            }
+
+            // Calculate time until unlock
+            const distance = nextUnlock ? Math.max(nextUnlock.getTime() - now.getTime(), 0) : 0;
+
+            // Calculate hours, minutes, seconds
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Format and display the time
+            unlockTimeEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // DEV debug output
+            if (DEV_DEBUG) {
+                const dev = document.getElementById('dev-debug-content');
+                if (dev) {
+                    dev.innerHTML = `now: ${now.toString()}<br>computedUnlocked: ${computedUnlocked}<br>nextUnlock: ${nextUnlock ? nextUnlock.toString() : 'none'}`;
+                }
+            }
+        }
+
+        function togglePlayPause() {
+            if (!songs[currentSongIndex]) return;
+
+            isPlaying = !isPlaying; // Toggle state first
+
+            if (isPlaying) {
+                // If we are starting to play, ensure the current song is loaded and played
+                // updateSongDisplay(true) will handle setting src, loading, and playing
+                updateSongDisplay(true);
+
+                // Update UI for playing state
+                playBtn.classList.add('playing');
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                audioPlayer.classList.add('playing');
+            } else {
+                // If we are pausing
+                audio.pause();
+
+                // Update UI for paused state
+                playBtn.classList.remove('playing');
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                audioPlayer.classList.remove('playing');
+            }
+        }
+
+        function updateProgress() {
+            if (audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = `${percent}%`;
+            }
+            requestAnimationFrame(updateProgress);
+        }
+
+        function checkForSongUnlock() {
+            const now = new Date();
+            // Compute songs unlocked using helper (handles Day2 midnight rule and subsequent 11:11 unlocks)
+            let songsUnlocked = getComputedSongsUnlocked(now);
+            // Special-case: Day 2 should be active on the whole of the 2nd day (startDate + 1 day)
+            // So unlock Day 2 if we've reached startDate + 1 calendar day (midnight) —
+            // subsequent days (>=3) continue to unlock at 11:11 AM as intended.
+
+            // Advance currentSongIndex if new songs are unlocked
+            console.log('[checkForSongUnlock] now=', now.toString(), 'songsUnlocked=', songsUnlocked, 'currentSongIndex=', currentSongIndex);
+            if (songsUnlocked > currentSongIndex + 1) {
+                currentSongIndex = songsUnlocked - 1;
+                updateSongDisplay();
+                try { updateMelodyPlaylist(); } catch (e) {}
+                try { updateMelodyPlaylist(); } catch (e) {}
+
+                // Trigger cinematic reveal when a new song unlocks (once per day)
+                if (songsUnlocked > lastSongRevealDay) {
+                    try {
+                        if (typeof window.triggerCinematicReveal === 'function') {
+                            window.triggerCinematicReveal(songsUnlocked);
+                        }
+                    } catch (e) { console.warn('Cinematic reveal failed', e); }
+                        lastSongRevealDay = songsUnlocked;
+                }
+
+                if (isPlaying) {
+                    audio.play().catch(error => {
+                        console.error("Audio playback failed:", error);
+                        currentSongArtist.textContent = "Audio file not available";
+                    });
+                }
+            }
+
+            // DEV debug output for checkForSongUnlock
+            if (DEV_DEBUG) {
+                const dev = document.getElementById('dev-debug-content');
+                if (dev) {
+                    const nextUnlock = songsUnlocked < 25 ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + songsUnlocked, 11, 11, 0, 0) : null;
+                    dev.innerHTML = `now: ${new Date().toString()}<br>startDate: ${startDate.toString()}<br>songsUnlocked: ${songsUnlocked}<br>currentSongIndex: ${currentSongIndex}<br>nextUnlock: ${nextUnlock ? nextUnlock.toString() : 'none'}`;
+                }
+            }
+
+            // Compute next unlock time (if any)
+            let nextUnlock = null;
+            if (songsUnlocked < 25) {
+                // next unlock is at startDate + songsUnlocked days at 11:11 AM
+                nextUnlock = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + songsUnlocked, 11, 11, 0, 0);
+            }
+
+            // Update the unlock countdown display (always HH:MM:SS to next 10:00)
+            if (nextUnlock) {
+                let distance = nextUnlock.getTime() - now.getTime();
+                if (distance < 0) distance = 0;
+                const totalHours = Math.floor(distance / (1000 * 60 * 60));
+                const hours = totalHours % 24;
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                unlockTimeEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            } else {
+                // All songs unlocked
+                unlockTimeEl.textContent = '00:00:00';
+            }
+        }
+
+        // Cinematic reveal function (global) — enhanced romantic cinematic experience
+        window.triggerCinematicReveal = function (dayNumber) {
+            try {
+                const dayIndex = Math.max(0, Math.min(dayNumber - 1, songs.length - 1));
+                const song = songs[dayIndex];
+                if (!song) return;
+
+                // Overlay structure with petal stage and romantic card
+                const overlay = document.createElement('div');
+                overlay.className = 'cinematic-overlay romantic-overlay';
+                overlay.innerHTML = `
+                    <div class="petal-stage" aria-hidden="true"></div>
+                    <div class="cinematic-spotlight" role="dialog" aria-modal="true" aria-label="Romantic reveal">
+                        <div class="romantic-card">
+                            <div class="cinematic-title">Day ${dayNumber}: ${song.title}</div>
+                            <div class="cinematic-sub">${song.artist}</div>
+                            <div id="romantic-msg" class="romantic-msg" aria-live="polite"></div>
+                            <div class="romantic-cta" style="margin-top:18px; text-align:center;">
+                                <button id="cinematic-play" class="btn btn-primary">Play</button>
+                                <button id="cinematic-kiss" class="btn" style="margin-left:8px">Send a Kiss 💋</button>
+                                <button id="cinematic-close" class="btn" style="margin-left:8px">Close</button>
+                            </div>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+
+                // Add additional styles for romantic elements (soft zoom/vignette/heartbeat)
+                requestAnimationFrame(() => overlay.classList.add('show'));
+
+                const playBtn = overlay.querySelector('#cinematic-play');
+                const closeBtn = overlay.querySelector('#cinematic-close');
+                const kissBtn = overlay.querySelector('#cinematic-kiss');
+                const msgEl = overlay.querySelector('#romantic-msg');
+
+                // Prepare audio and chime
+                audio.src = song.src;
+                audio.currentTime = 0;
+
+                const chimeSrc = (typeof AUDIO_PATH !== 'undefined' ? AUDIO_PATH : '') + 'chime.mp3';
+                const chime = new Audio(chimeSrc);
+                chime.preload = 'auto';
+
+                // Petal animation: create falling petals DOM elements
+                const petalStage = overlay.querySelector('.petal-stage');
+                let petalInterval = null;
+                function spawnPetals(count = 14) {
+                    for (let i = 0; i < count; i++) {
+                        const p = document.createElement('div');
+                        p.className = 'petal';
+                        p.style.left = (10 + Math.random() * 80) + '%';
+                        p.style.animationDelay = (Math.random() * 1.2) + 's';
+                        p.style.opacity = (0.7 + Math.random() * 0.3);
+                        petalStage.appendChild(p);
+                        // remove after animation
+                        setTimeout(() => { p.remove(); }, 7000 + Math.random() * 3000);
+                    }
+                }
+
+                // Typewriter message
+                function typeMessage(text, el, speed = 40) {
+                    el.textContent = '';
+                    let i = 0;
+                    const t = setInterval(() => {
+                        if (i >= text.length) { clearInterval(t); return; }
+                        el.textContent += text[i++];
+                    }, speed);
+                    return t;
+                }
+
+                // Heartbeat pulse and gentle zoom
+                overlay.classList.add('romantic-mode');
+
+                function playSongWithCelebration() {
+                    audio.play().then(() => {
+                        playBtn.textContent = 'Playing…';
+                        if (window.spawnConfetti) window.spawnConfetti(48);
+                        if (window.spawnHeartCanvas) window.spawnHeartCanvas(window.innerWidth / 2, window.innerHeight / 2, 16);
+                        // start petal drifts
+                        petalInterval = setInterval(() => spawnPetals(4), 900);
+                    }).catch(err => {
+                        playBtn.textContent = 'Play (tap to enable sound)';
+                        console.warn('Audio autoplay blocked:', err);
+                    });
+                }
+
+                function attemptChimeThenSong() {
+                    chime.play().then(() => {
+                        setTimeout(playSongWithCelebration, 650);
+                    }).catch(err => {
+                        console.warn('Chime autoplay blocked or unavailable:', err);
+                        playSongWithCelebration();
+                    });
+                }
+
+                // Send a kiss action — spawn heart burst and small confetti
+                kissBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (window.spawnHeartCanvas) window.spawnHeartCanvas(window.innerWidth / 2 + (Math.random() * 200 - 100), window.innerHeight / 2, 12);
+                    if (window.spawnConfetti) window.spawnConfetti(12);
+                    // short visual pulse
+                    overlay.classList.add('kiss-pulse');
+                    setTimeout(() => overlay.classList.remove('kiss-pulse'), 700);
+                });
+
+                // Attempt autoplay once
+                attemptChimeThenSong();
+
+                playBtn.addEventListener('click', (e) => { e.stopPropagation(); attemptChimeThenSong(); });
+
+                closeBtn.addEventListener('click', () => {
+                    cleanupAndClose();
+                });
+
+                // Remove overlay when audio ends
+                const onEnded = () => { cleanupAndClose(); audio.removeEventListener('ended', onEnded); };
+                audio.addEventListener('ended', onEnded);
+
+                // allow tap outside to close (soft)
+                overlay.addEventListener('click', (ev) => { if (ev.target === overlay) { cleanupAndClose(); } });
+
+                // Ensure focus
+                setTimeout(() => playBtn.focus(), 350);
+
+                // Initial romantic typed message
+                const messageText = `My dearest — every day with you is a gift. Open this with love. ♥`;
+                typeMessage(messageText, msgEl, 36);
+
+                function cleanupAndClose() {
+                    try {
+                        audio.pause();
+                        overlay.classList.remove('show');
+                        overlay.classList.remove('romantic-mode');
+                        if (petalInterval) { clearInterval(petalInterval); petalInterval = null; }
+                        setTimeout(() => overlay.remove(), 700);
+                    } catch (e) { console.warn(e); }
+                }
+
+            } catch (e) { console.error('triggerCinematicReveal error', e); }
+        };
+
+        // --- FIXED Main App Functions ---
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = countdownDate - now;
+
+            let days = 0, hours = 0, minutes = 0, seconds = 0;
+            if (distance > 0) {
+                const dayMs = 1000 * 60 * 60 * 24;
+                const totalDays = Math.ceil(distance / dayMs);
+                const remainder = distance - Math.max(totalDays - 1, 0) * dayMs;
+                days = totalDays;
+                hours = Math.floor(remainder / (1000 * 60 * 60));
+                minutes = Math.floor((remainder % (1000 * 60 * 60)) / (1000 * 60));
+                seconds = Math.floor((remainder % (1000 * 60)) / 1000);
+            }
+
+            daysEl.textContent = String(days).padStart(2, '0');
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+
+            checkDailyTheme();
+
+            // Handle countdown completion - unlock everything on Dec 25th at 12:01 AM
+            if (distance < 0 && !isSurpriseUnlocked) {
+                // Check if it's after December 24th 00:00 and before December 25th 12:01 AM
+                const nowDate = new Date();
+                const dec24End = new Date(targetYear, 11, 24, 23, 59, 59, 999).getTime();
+                const dec25Midnight = new Date(targetYear, 11, 25, 0, 1, 0, 0).getTime();
+
+                if (nowDate.getTime() > dec24End && nowDate.getTime() < dec25Midnight) {
+                    // Show birthday message but keep everything locked
+                    clearInterval(timerInterval);
+                    document.getElementById('countdown-timer').style.display = 'none';
+                    revealMessageDiv.classList.remove('hidden');
+                    return;
+                }
+
+                if (nowDate.getTime() >= dec25Midnight) {
+                    // Full unlock - everything becomes available
+                    clearInterval(timerInterval);
+                    document.getElementById('countdown-timer').style.display = 'none';
+                    revealMessageDiv.classList.remove('hidden');
+                    lockedMessage.classList.add('hidden');
+                    surpriseDetails.classList.remove('hidden');
+                    isSurpriseUnlocked = true;
+
+                    // Unlock all respects, songs, and garden pieces
+                    unlockAllContent();
+
+                    if (currentActiveTab !== 'TheSurprise') {
+                        switchTab('TheSurprise');
+                    }
+                }
+            }
+        }
+
+        function unlockAllContent() {
+            // Unlock all respect cards
+            for (let j = 0; j < 25; j++) {
+                const card = respectCardsContainer.children[j];
+                if (card && !card.classList.contains('unlocked')) {
+                    card.classList.add('unlocked');
+                    const lockedOverlay = card.querySelector('.locked-overlay');
+                    if (lockedOverlay) {
+                        lockedOverlay.style.display = 'none';
+                    }
+                }
+            }
+            unlockedRespects = 25;
+            updateRespectProgress();
+
+            // Unlock all songs
+            currentSongIndex = 24;
+            updateSongDisplay();
+
+            // Unlock all garden pieces
+            for (let j = unlockedPieces; j < 25; j++) {
+                setTimeout(() => {
+                    addHeartPieceToGarden();
+                }, j * 100);
+            }
+        }
+
+        function updateTheme(theme) {
+            animatedBg.style.background = `linear-gradient(135deg, ${theme.gradient1}, ${theme.gradient2})`;
+            themeTitle.textContent = theme.title;
+
+            if (particleInterval) {
+                clearInterval(particleInterval);
+            }
+
+            particleInterval = setInterval(() => {
+                createParticle(theme.particleType);
+            }, 2000);
+        }
+
+        function getThemesUnlocked(now = new Date()) {
+            let unlocked = 0;
+            for (let d = 0; d < 25; d++) {
+                const dt = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + d, 9, 0, 0, 0);
+                if (now.getTime() >= dt.getTime()) {
+                    unlocked = d + 1;
+                } else {
+                    break;
+                }
+            }
+            return unlocked;
+        }
+
+        function checkDailyTheme() {
+            const unlocked = getThemesUnlocked();
+            const idx = Math.max(unlocked - 1, 0);
+            const newTheme = themes[idx];
+            if (!newTheme) return;
+            if (!currentTheme || currentTheme.title !== newTheme.title) {
+                currentTheme = newTheme;
+                updateTheme(currentTheme);
+            }
+        }
+
+        function createParticle(type) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle', type);
+
+            // Use emoji instead of SVG for better compatibility
+            if (type === 'butterfly') {
+                particle.textContent = '🦋';
+                particle.style.fontSize = '20px';
+            } else if (type === 'feather') {
+                particle.textContent = '🪶';
+                particle.style.fontSize = '20px';
+            } else if (type === 'glitter') {
+                particle.textContent = '✨';
+                particle.style.fontSize = '16px';
+            }
+
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                document.body.removeChild(particle);
+            }, 10000);
+        }
+
+        function switchTab(targetId) {
+            currentActiveTab = targetId;
+            contentSections.forEach(section => section.classList.remove('active'));
+            navButtons.forEach(button => button.classList.remove('active'));
+
+            document.getElementById(targetId).classList.add('active');
+            document.getElementById('nav-' + targetId).classList.add('active');
+        }
+
+        function createFloatingObject() {
+            const object = document.createElement('div');
+            object.classList.add('floating-object');
+            object.textContent = Math.random() > 0.5 ? '❤️' : '🌸';
+            object.style.left = Math.random() * 100 + '%';
+            object.style.fontSize = (Math.random() * 10 + 10) + 'px';
+            object.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            document.body.appendChild(object);
+            setTimeout(() => object.remove(), 20000);
+        }
+
+        // Initialize the application
+        function initialize() {
+            // Display the actual birthday date
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            birthdayDateEl.textContent = `Dec 25, 2025 00:01`;
+
+            // Set up navigation listeners
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    switchTab(button.dataset.target);
+                });
+            });
+
+            // Set up audio player listeners
+            playBtn.addEventListener('click', togglePlayPause);
+            progressBar.addEventListener('click', (e) => {
+                if (audio.duration) {
+                    const clickX = e.offsetX;
+                    const width = progressBar.offsetWidth;
+                    const percentage = (clickX / width);
+                    audio.currentTime = percentage * audio.duration;
+                }
+            });
+
+            // Add event listener for when a song ends
+            audio.addEventListener('ended', () => {
+                togglePlayPause(); // Just pause, don't advance to next song
+            });
+
+            // Start the countdown
+            updateCountdown();
+            timerInterval = setInterval(updateCountdown, 1000);
+
+            // Initialize all components
+            initRespectCards();
+            initGarden();
+            createMelodyPlaylist();
+
+            // One-line test override: set to a number 1..25 to force that melody for testing, or 0 to disable
+            // By default keep this disabled so production logic is used
+            const FORCE_SONG_DAY = 0; // TEMP TEST: forcing Day 2 so tester can confirm immediate behavior
+
+            // Make sure we set the correct starting melody based on the current date
+            // Compute songsUnlocked at startup (same rules used by checkForSongUnlock)
+            (function setInitialSongFromDate() {
+                // Prefer a small helper that computes songs unlocked from the start date
+                const computed = getComputedSongsUnlocked(new Date());
+                let songsUnlocked = computed;
+                songsUnlocked = Math.min(Math.max(songsUnlocked, 0), 25);
+                if (FORCE_SONG_DAY > 0) {
+                    currentSongIndex = Math.max(0, Math.min(FORCE_SONG_DAY - 1, 24));
+                } else if (songsUnlocked > 0) {
+                    currentSongIndex = Math.max(0, Math.min(songsUnlocked - 1, 24));
+                }
+            })();
+
+            // If any debug-badge was left in the DOM from previous testing, remove it when forcing is disabled
+            try {
+                if (typeof FORCE_SONG_DAY !== 'undefined' && FORCE_SONG_DAY === 0) {
+                    const oldDbg = document.getElementById('melody-debug');
+                    if (oldDbg && oldDbg.parentNode) oldDbg.parentNode.removeChild(oldDbg);
+                }
+            } catch (e) { /* ignore */ }
+
+            // Recreate the audio element to avoid any lingering playback instance from previous loads
+            try {
+                // If an older audio instance is playing, stop it before replacing the reference
+                try {
+                    if (audio && !audio.paused) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        // clear src to fully stop playback and free resources
+                        try { audio.src = ''; } catch (e) {}
+                    }
+                } catch (inner) { /* ignore */ }
+
+                audio = new Audio();
+            } catch (e) { console.warn('Unable to recreate audio object', e); }
+
+            // Ensure the UI/audio reflect the computed/forced currentSongIndex immediately
+            try {
+                console.log('[init] initial currentSongIndex =', currentSongIndex);
+                updateSongDisplay(false);
+                console.log('[init] audio.src after updateSongDisplay =', audio.src);
+
+                // If we are using the FORCE_SONG_DAY override, aggressively switch the audio element
+                // so playback switches immediately (helps when an old source is still playing).
+                if (typeof FORCE_SONG_DAY !== 'undefined' && FORCE_SONG_DAY > 0) {
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.src = songs[currentSongIndex].src;
+                        audio.load();
+                        // Try to play (will be blocked if autoplay is not allowed)
+                        audio.play().catch(() => { /* autoplay may be blocked */ });
+                                console.log('[init] forced audio.src set to', audio.src);
+                                // if developer forced a day, show a small visible debug hint so testers can confirm
+                                try {
+                                    let dbg = document.getElementById('melody-debug');
+                                    if (!dbg && FORCE_SONG_DAY > 0) {
+                                        dbg = document.createElement('div');
+                                        dbg.id = 'melody-debug';
+                                        dbg.style.position = 'fixed';
+                                        dbg.style.left = '12px';
+                                        dbg.style.top = '12px';
+                                        dbg.style.zIndex = 9999;
+                                        dbg.style.background = 'rgba(0,0,0,0.8)';
+                                        dbg.style.color = '#fff';
+                                        dbg.style.padding = '8px 10px';
+                                        dbg.style.borderRadius = '6px';
+                                        dbg.style.fontSize = '13px';
+                                        dbg.style.fontFamily = 'monospace';
+                                        dbg.style.boxShadow = '0 6px 18px rgba(0,0,0,0.5)';
+                                        document.body.appendChild(dbg);
+                                    }
+                                    if (dbg) dbg.innerHTML = `FORCE=${FORCE_SONG_DAY} • currentIndex=${currentSongIndex} • src=${audio.src.split('/').pop()}`;
+                                } catch(e) {}
+                    } catch (e) {
+                        console.warn('Failed to force audio playback at init', e);
+                    }
+                }
+            } catch (e) { console.warn('init updateSongDisplay failed', e); }
+
+            initAudioPlayer();
+
+            // Ensure the melody unlock countdown updates every second,
+            // independent of audio player state or errors.
+            if (songTimerInterval) {
+                clearInterval(songTimerInterval);
+            }
+            checkForSongUnlock();
+            songTimerInterval = setInterval(checkForSongUnlock, 1000);
+            // Initialize Magic Room (videos + growing heart)
+            initMagicRoom();
+
+            setInterval(createFloatingObject, 3000);
+
+            checkDailyTheme();
+            setInterval(checkDailyTheme, 1000);
+        }
+
+        // Start the application as soon as DOM is ready (more reliable than window.onload)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+
+        // --- Magic Room - Growing Heart Functions ---
+        const growingHeart = document.getElementById('growing-heart');
+        const heartSvg = document.getElementById('heart-svg');
+        const heartDayNumber = document.getElementById('heart-day-number');
+        const heartSizeText = document.getElementById('heart-size-text');
+        const heartParticles = document.getElementById('heart-particles');
+
+        // Magic Room Video Elements
+        const videoToggleBtn = document.getElementById('video-toggle-btn');
+        const videoBtnText = document.getElementById('video-btn-text');
+        const magicVideoWrapper = document.getElementById('magic-video-wrapper');
+        const magicVideo = document.getElementById('magic-video');
+        const videoSource = document.getElementById('video-source');
+        const videoDayNumber = document.getElementById('video-day-number');
+        // whether the melody audio was playing before the video modal opened
+        let wasMelodyPlayingBeforeVideo = false;
+
+        function initMagicRoom() {
+            updateGrowingHeart();
+            createHeartParticles();
+            setInterval(updateGrowingHeart, 60000); // Update every minute
+            setInterval(createHeartParticles, 2000); // Create particles every 2 seconds
+            checkVideoAvailability();
+            // Check video availability every second so it changes right at 22:00:00
+            if (videoTimerInterval) clearInterval(videoTimerInterval);
+            videoTimerInterval = setInterval(checkVideoAvailability, 1000);
+        }
+
+        function updateGrowingHeart() {
+            const now = new Date();
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const currentDay = Math.min(daysSinceStart + 1, 25); // Day 1 to 25
+
+            // Calculate heart size (starts at 60px, grows to 400px on day 25)
+            const minSize = 60;
+            const maxSize = 400;
+            const size = minSize + ((currentDay - 1) / 24) * (maxSize - minSize);
+
+            // Update heart size
+            heartSvg.style.width = `${size}px`;
+            heartSvg.style.height = `${size}px`;
+
+            // Update glow size proportionally
+            const glowSize = size * 1.5;
+            const glowElement = growingHeart.querySelector('.heart-glow');
+            if (glowElement) {
+                glowElement.style.width = `${glowSize}px`;
+                glowElement.style.height = `${glowSize}px`;
+            }
+
+            // Update day number
+            heartDayNumber.textContent = currentDay;
+
+            // Update size text
+            if (currentDay === 25) {
+                heartSizeText.textContent = '💖 Full of love! Our heart is complete! 💖';
+                heartSvg.style.filter = 'drop-shadow(0 0 40px rgba(255, 107, 157, 1)) drop-shadow(0 0 60px rgba(192, 132, 252, 0.8))';
+            } else {
+                const percentage = Math.round((currentDay / 25) * 100);
+                heartSizeText.textContent = `${percentage}% of love grown...`;
+            }
+
+            // Adjust animation speed based on size (bigger = slower beat)
+            const beatSpeed = 1.2 - ((currentDay - 1) / 24) * 0.4; // 1.2s to 0.8s
+            heartSvg.style.animationDuration = `${beatSpeed}s`;
+        }
+
+        function createHeartParticles() {
+            // Create 3-5 particles around the heart
+            const particleCount = Math.floor(Math.random() * 3) + 3;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'heart-particle';
+
+                // Random position around heart
+                const angle = Math.random() * 360;
+                const distance = 30 + Math.random() * 50;
+                const x = Math.cos(angle * Math.PI / 180) * distance;
+                const y = Math.sin(angle * Math.PI / 180) * distance;
+
+                particle.style.setProperty('--random-x', x / 100);
+                particle.style.setProperty('--random-y', y / 100);
+                particle.style.left = `50%`;
+                particle.style.top = `50%`;
+                particle.style.animationDelay = `${Math.random() * 0.5}s`;
+                particle.style.animationDuration = `${2 + Math.random() * 2}s`;
+
+                // Random color from romantic palette
+                const colors = ['#ff6b9d', '#c084fc', '#fbbf24', '#ffffff'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                heartParticles.appendChild(particle);
+
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                }, 4000);
+            }
+        }
+
+        function checkVideoAvailability() {
+            const now = new Date();
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const hoursToday = now.getHours();
+            const minutesToday = now.getMinutes();
+            // Video unlocks after 11:11 PM (23:11)
+            let videoDay = daysSinceStart;
+            if (hoursToday > 23 || (hoursToday === 23 && minutesToday >= 11)) {
+                videoDay = daysSinceStart + 1;
+            }
+
+            // base computed unlocked day from time
+            let computedVideoDay = Math.min(Math.max(videoDay, 0), 25);
+            // allow simulated override for testing
+            videoDay = Math.max(computedVideoDay, simulatedVideoDay);
+
+            // Use the `videos` array when available so metadata (title) and path come from the same source
+            const videoObj = (videoDay > 0 && videos[videoDay - 1]) ? videos[videoDay - 1] : null;
+            const videoPath = videoObj ? videoObj.src : '';
+
+            // If the day changed (new video unlocked), show a romantic popup
+            if (videoDay !== lastVideoDay) {
+                const fb = VIDEO_PATH ? (VIDEO_PATH + '1.mp4') : '1.mp4';
+                if (videoObj && videoPath) {
+                    videoSource.src = videoPath;
+                } else if (videoDay > 0) {
+                    videoSource.src = fb;
+                } else {
+                    videoSource.src = '';
+                }
+                videoDayNumber.textContent = videoDay;
+
+                // Enable toggle when the day is unlocked, even if specific video is missing (fallback to 1.mp4)
+                if (videoDay > 0) {
+                    const titleText = videoObj && videoObj.title ? `Day ${videoDay}: ${videoObj.title}` : `Day ${videoDay} Video`;
+                    videoBtnText.textContent = `💕 Watch ${titleText} 💕`;
+                    videoToggleBtn.disabled = false;
+                    videoToggleBtn.style.opacity = '1';
+                } else {
+                    videoBtnText.textContent = '💕 Video Coming Soon 💕';
+                    videoToggleBtn.disabled = true;
+                    videoToggleBtn.style.opacity = '0.6';
+                }
+
+                // If a new video just became available, and the wrapper isn't visible, pop it up romantically
+                const appContainer = document.getElementById('app-container');
+                const isLoggedIn = appContainer && !appContainer.hasAttribute('aria-hidden');
+                if (isLoggedIn && videoDay > lastVideoDay && !magicVideoWrapper.classList.contains('show')) {
+                    // If melodies were playing, pause them while the video auto-opens
+                    try {
+                        if (isPlaying) {
+                            wasMelodyPlayingBeforeVideo = true;
+                            togglePlayPause();
+                        } else {
+                            wasMelodyPlayingBeforeVideo = false;
+                        }
+                    } catch (e) { /* ignore */ }
+                    magicVideoWrapper.classList.add('show');
+                    const fb = VIDEO_PATH ? (VIDEO_PATH + '1.mp4') : '1.mp4';
+                    if (!videoSource.src) {
+                        videoSource.src = fb;
+                    }
+                    magicVideo.load();
+                    magicVideo.muted = false;
+                    magicVideo.volume = 1.0;
+                    magicVideo.currentTime = 0;
+                    // magicVideo.play().then(() => {
+                    //     const overlay = document.getElementById('video-overlay');
+                    //     if (overlay) overlay.classList.add('hidden');
+                    // }).catch(() => {
+                    //     const overlay = document.getElementById('video-overlay');
+                    //     if (overlay) overlay.classList.remove('hidden');
+                    // });
+                    videoBtnText.textContent = '💕 Hide Video 💕';
+                } else if (magicVideoWrapper.classList.contains('show') && (videoObj || videoSource.src)) {
+                    magicVideo.load();
+                }
+
+                lastVideoDay = videoDay;
+            }
+
+            // Update "Next video unlocks in" countdown (HH:MM:SS) to next 22:00
+            const unlocked = getComputedVideosUnlocked(now);
+            let nextVideoUnlock = null;
+            if (unlocked < 25) {
+                nextVideoUnlock = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + unlocked, 23, 11, 0, 0);
+            }
+            if (videoUnlockTimeEl) {
+                if (nextVideoUnlock) {
+                    let vd = nextVideoUnlock.getTime() - now.getTime();
+                    if (vd < 0) vd = 0;
+                    const vHours = Math.floor(vd / (1000 * 60 * 60)) % 24;
+                    const vMinutes = Math.floor((vd % (1000 * 60 * 60)) / (1000 * 60));
+                    const vSeconds = Math.floor((vd % (1000 * 60)) / 1000);
+                    videoUnlockTimeEl.textContent = `${String(vHours).padStart(2, '0')}:${String(vMinutes).padStart(2, '0')}:${String(vSeconds).padStart(2, '0')}`;
+                } else {
+                    videoUnlockTimeEl.textContent = '00:00:00';
+                }
+            }
+        }
+
+        // Helper: compute how many songs are unlocked for the current time
+        // Rules:
+        // - Day 1 unlocks at startDate at 11:11 AM
+        // - Day 2 is active for the full calendar day (startDate + 1 at 00:00)
+        // - Day N (3..25) unlocks at startDate + (N-1) days at 11:11 AM
+        function getComputedSongsUnlocked(now = new Date()) {
+            const dayMs = 1000 * 60 * 60 * 24;
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / dayMs);
+
+            if (daysSinceStart < 0) return 0;
+
+            // Day 1: Unlocks at 11:11 AM on the start date
+            const day1UnlockTime = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 11, 11, 0, 0).getTime();
+            if (now.getTime() < day1UnlockTime) return 0;
+
+            // After Day 1, 1 song is definitely unlocked.
+            let unlocked = 1;
+
+            // Day 2: Unlocks at any time on the day after the start date
+            const day2StartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 1, 0, 0, 0, 0).getTime();
+            if (now.getTime() >= day2StartDate) {
+                unlocked = 2;
+            } else {
+                return unlocked;
+            }
+
+            // Day 3 to 25: Unlocks at 11:11 AM on startDate + (N-1) days
+            for (let d = 3; d <= 25; d++) {
+                const unlockDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + (d - 1), 11, 11, 0, 0);
+                if (now.getTime() >= unlockDate.getTime()) {
+                    unlocked = d;
+                } else {
+                    break;
+                }
+            }
+
+            return Math.min(unlocked, 25);
+        }
+
+        // Video toggle button handler
+        videoToggleBtn.addEventListener('click', () => {
+            // When opening the video modal, pause the melodies audio if it's playing
+            try {
+                if (!magicVideoWrapper.classList.contains('show')) {
+                    if (isPlaying) {
+                        wasMelodyPlayingBeforeVideo = true;
+                        // pause via toggle so UI state updates too
+                        togglePlayPause();
+                    } else {
+                        wasMelodyPlayingBeforeVideo = false;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+            const closeBtn = document.getElementById('magic-video-close');
+            if (magicVideoWrapper.classList.contains('show')) {
+                // Close modal
+                magicVideo.pause();
+                magicVideoWrapper.classList.remove('show');
+                magicVideoWrapper.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('no-scroll');
+                videoBtnText.textContent = `💕 Watch Day ${videoDayNumber.textContent} Video 💕`;
+                // restore focus to toggle
+                videoToggleBtn.focus();
+                // Resume melodies audio if it was previously playing before video opened
+                try {
+                    if (wasMelodyPlayingBeforeVideo) {
+                        togglePlayPause();
+                        wasMelodyPlayingBeforeVideo = false;
+                    }
+                } catch (e) { /* ignore */ }
+            } else {
+                magicVideoWrapper.classList.add('show');
+                magicVideoWrapper.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('no-scroll');
+                const fb = VIDEO_PATH ? (VIDEO_PATH + '1.mp4') : '1.mp4';
+                if (!videoSource.src) {
+                    videoSource.src = fb;
+                }
+                magicVideo.load();
+                magicVideo.muted = false;
+                magicVideo.volume = 1.0;
+                magicVideo.currentTime = 0;
+                magicVideo.play().then(() => {
+                    const overlay = document.getElementById('video-overlay');
+                    if (overlay) overlay.classList.add('hidden');
+                }).catch(() => {
+                    const overlay = document.getElementById('video-overlay');
+                    if (overlay) overlay.classList.remove('hidden');
+                });
+                videoBtnText.textContent = '💕 Hide Video 💕';
+                setTimeout(() => { if (closeBtn) closeBtn.focus(); }, 320);
+            }
+        });
+
+        // Close button handler for the modal
+        const closeBtn = document.getElementById('magic-video-close');
+            if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                magicVideo.pause();
+                magicVideoWrapper.classList.remove('show');
+                magicVideoWrapper.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('no-scroll');
+                if (videoToggleBtn) videoToggleBtn.focus();
+                // resume melodies audio if it was previously playing
+                try {
+                    if (wasMelodyPlayingBeforeVideo) {
+                        togglePlayPause();
+                        wasMelodyPlayingBeforeVideo = false;
+                    }
+                } catch (e) { /* ignore */ }
+            });
+        }
+
+        // Escape key should also close the modal when open
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                if (magicVideoWrapper.classList.contains('show')) {
+                    magicVideo.pause();
+                    magicVideoWrapper.classList.remove('show');
+                    magicVideoWrapper.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('no-scroll');
+                    if (videoToggleBtn) videoToggleBtn.focus();
+                    // resume melodies audio if it was previously playing
+                    try {
+                        if (wasMelodyPlayingBeforeVideo) {
+                            togglePlayPause();
+                            wasMelodyPlayingBeforeVideo = false;
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+            }
+        });
+
+        // Trap focus inside the video modal while open
+        document.addEventListener('keydown', (e) => {
+            if (!magicVideoWrapper.classList.contains('show')) return;
+            if (e.key !== 'Tab') return;
+            const focusable = Array.from(magicVideoWrapper.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'))
+                .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+
+        // Update video when it changes — try autoplay, if blocked show overlay
+        magicVideo.addEventListener('loadeddata', () => {
+            const overlay = document.getElementById('video-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        });
+
+        // Fallback: if video fails to load, default to 1.mp4
+        magicVideo.addEventListener('error', () => {
+            const fb = VIDEO_PATH ? (VIDEO_PATH + '1.mp4') : '1.mp4';
+            if (videoSource && videoSource.src && !videoSource.src.endsWith('1.mp4')) {
+                videoSource.src = fb;
+                magicVideo.load();
+            }
+        });
+
+        // Overlay play button (user-initiated fallback)
+        const videoOverlayPlay = document.getElementById('video-overlay-play');
+        if (videoOverlayPlay) {
+            videoOverlayPlay.addEventListener('click', () => {
+                const overlay = document.getElementById('video-overlay');
+                magicVideo.play().then(() => {
+                    if (overlay) overlay.classList.add('hidden');
+                }).catch(err => {
+                    console.error('Playback still blocked:', err);
+                });
+            });
+        }
+
+        // Hide overlay when user manually plays via controls
+        magicVideo.addEventListener('play', () => {
+            const overlay = document.getElementById('video-overlay');
+            if (overlay) overlay.classList.add('hidden');
+        });
+
+        // Build and manage video playlist and simulate button
+        function getComputedVideosUnlocked(now = new Date()) {
+            const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const hoursToday = now.getHours();
+            const minutesToday = now.getMinutes();
+            let base = daysSinceStart;
+            if (hoursToday > 23 || (hoursToday === 23 && minutesToday >= 11)) base = daysSinceStart + 1;
+            base = Math.min(Math.max(base, 0), 25);
+            // account for simulation override
+            return Math.max(base, simulatedVideoDay);
+        }
+
+        function createVideoPlaylist() {
+            const playlist = document.getElementById('video-playlist');
+            if (!playlist) return;
+            playlist.innerHTML = '';
+            for (let d = 1; d <= 25; d++) {
+                const btn = document.createElement('button');
+                btn.textContent = d;
+                btn.dataset.day = d;
+                btn.className = '';
+                btn.addEventListener('click', () => {
+                    const unlocked = getComputedVideosUnlocked();
+                    if (d <= unlocked) {
+                        // load and show selected day
+                        lastVideoDay = d;
+                        const videoObj = videos[d - 1];
+                        if (videoObj) {
+                            videoSource.src = videoObj.src;
+                            videoDayNumber.textContent = d;
+                            magicVideo.load();
+                            // Pause melodies if they're playing before showing the modal
+                            try {
+                                if (isPlaying) {
+                                    wasMelodyPlayingBeforeVideo = true;
+                                    togglePlayPause();
+                                } else {
+                                    wasMelodyPlayingBeforeVideo = false;
+                                }
+                            } catch (e) {}
+                            magicVideoWrapper.classList.add('show');
+                            videoBtnText.textContent = '💕 Hide Video 💕';
+                        }
+                        updateVideoPlaylist();
+                    }
+                });
+                playlist.appendChild(btn);
+            }
+            updateVideoPlaylist();
+        }
+
+        function updateVideoPlaylist() {
+            const playlist = document.getElementById('video-playlist');
+            if (!playlist) return;
+            const unlocked = getComputedVideosUnlocked();
+            Array.from(playlist.children).forEach(btn => {
+                const day = Number(btn.dataset.day);
+                btn.classList.remove('unlocked', 'locked');
+                if (day <= unlocked) {
+                    btn.classList.add('unlocked');
+                    btn.disabled = false;
+                    btn.title = videos[day - 1] ? videos[day - 1].title : `Day ${day}`;
+                } else {
+                    btn.classList.add('locked');
+                    btn.disabled = true;
+                    btn.title = 'Locked until its unlock time';
+                }
+            });
+        }
+
+        // Simulate Next Day button
+        const simBtn = document.getElementById('simulate-next-day-btn');
+        if (simBtn) {
+            simBtn.addEventListener('click', () => {
+                simulatedVideoDay = Math.min(simulatedVideoDay + 1, 25);
+                // force lastVideoDay lower so checkVideoAvailability triggers popup for simulated day
+                lastVideoDay = Math.min(lastVideoDay, simulatedVideoDay - 1);
+                checkVideoAvailability();
+                updateVideoPlaylist();
+            });
+        }
+
+        // --- Melody playlist builder (Day 1..25) ---
+        function getComputedSongsUnlockedForUI(now = new Date()) {
+            // Reuse existing helper, but keep a small wrapper if UI needs to call differently
+            return getComputedSongsUnlocked(now);
+        }
+
+        function createMelodyPlaylist() {
+            const playlist = document.getElementById('melody-playlist');
+            if (!playlist) return;
+            playlist.innerHTML = '';
+            for (let d = 1; d <= 25; d++) {
+                const btn = document.createElement('button');
+                btn.textContent = d;
+                btn.dataset.day = d;
+                btn.className = '';
+                btn.addEventListener('click', () => {
+                    const unlocked = getComputedSongsUnlockedForUI();
+                    if (d <= unlocked) {
+                        // select song
+                        currentSongIndex = d - 1;
+                        updateSongDisplay(true);
+                        updateMelodyPlaylist();
+                    }
+                });
+                playlist.appendChild(btn);
+            }
+            updateMelodyPlaylist();
+        }
+
+        function updateMelodyPlaylist() {
+            const playlist = document.getElementById('melody-playlist');
+            if (!playlist) return;
+            const unlocked = getComputedSongsUnlockedForUI();
+            Array.from(playlist.children).forEach(btn => {
+                const day = Number(btn.dataset.day);
+                btn.classList.remove('unlocked', 'locked', 'active');
+                if (day <= unlocked) {
+                    btn.classList.add('unlocked');
+                    btn.disabled = false;
+                    btn.title = songs[day - 1] ? songs[day - 1].title : `Day ${day}`;
+                } else {
+                    btn.classList.add('locked');
+                    btn.disabled = true;
+                    btn.title = 'Locked until its unlock time';
+                }
+                if (day === currentSongIndex + 1) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Create melody playlist on load
+        createMelodyPlaylist();
+
+        // 'Simulate Next Melody' removed - melodies unlock automatically and should not be simulated in production
+
+        // Create playlist on load
+        createVideoPlaylist();
+
+        // Enhanced Audio Player - Music Particles
+        const musicParticles = document.getElementById('music-particles');
+        const heartSpeakingLabel = document.getElementById('heart-speaking-label');
+
+        function createMusicParticles() {
+            if (!audioPlayer.classList.contains('playing')) return;
+
+            const notes = ['♪', '♫', '♬', '♩', '♭', '♮', '♯'];
+            const hearts = ['💖', '💕', '💗', '💓', '💝'];
+            const symbols = [...notes, ...hearts];
+
+            // Create 2-3 particles
+            const count = Math.floor(Math.random() * 2) + 2;
+
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+
+                    if (notes.includes(symbol)) {
+                        particle.className = 'music-note';
+                    } else {
+                        particle.className = 'floating-heart';
+                    }
+
+                    particle.textContent = symbol;
+                    particle.style.left = `${20 + Math.random() * 60}%`;
+                    particle.style.animationDelay = `${Math.random() * 2}s`;
+                    particle.style.animationDuration = `${4 + Math.random() * 3}s`;
+
+                    musicParticles.appendChild(particle);
+
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 7000);
+                }, i * 300);
+            }
+        }
+
+        // Update heart speaking label based on playing state
+        function updateHeartSpeakingLabel() {
+            if (isPlaying) {
+                const messages = [
+                    "💖 my heart is speaking 💖",
+                    "💕 listen to my love 💕",
+                    "💗 feel my heartbeat 💗",
+                    "💓 this is for you 💓",
+                    "💝 with all my love 💝"
+                ];
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                heartSpeakingLabel.textContent = randomMessage;
+            } else {
+                heartSpeakingLabel.textContent = "💖 my heart is speaking 💖";
+            }
+        }
+
+        // Enhanced toggle play/pause with music particles
+        const originalTogglePlayPause = togglePlayPause;
+        togglePlayPause = function () {
+            originalTogglePlayPause();
+
+            if (isPlaying) {
+                updateHeartSpeakingLabel();
+                // Create music particles when playing
+                setInterval(createMusicParticles, 2000);
+            } else {
+                // Clear particles when paused
+                const existingParticles = musicParticles.querySelectorAll('.music-note, .floating-heart');
+                existingParticles.forEach(p => p.remove());
+            }
+        };
+    </script>
+</body>
+
+</html>
